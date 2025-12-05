@@ -119,7 +119,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<UserType?>(
-                    value: _selectedUserType,
+                    initialValue: _selectedUserType,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: const Color(0xFFF8F9FA),
@@ -134,19 +134,19 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                     ),
                     items: const [
                       DropdownMenuItem(
-                        value: null,
+                        initialValue: null,
                         child: Text('جميع الأنواع'),
                       ),
                       DropdownMenuItem(
-                        value: UserType.student,
+                        initialValue: UserType.student,
                         child: Text('طالب'),
                       ),
                       DropdownMenuItem(
-                        value: UserType.driver,
+                        initialValue: UserType.driver,
                         child: Text('سائق'),
                       ),
                       DropdownMenuItem(
-                        value: UserType.admin,
+                        initialValue: UserType.admin,
                         child: Text('مسؤول'),
                       ),
                     ],
@@ -212,7 +212,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                       columnSpacing: 24,
                       horizontalMargin: 24,
                       minWidth: 900,
-                      headingRowColor: MaterialStateProperty.all(
+                      headingRowColor: WidgetStateProperty.all(
                         const Color(0xFFF8F9FA),
                       ),
                       headingTextStyle: const TextStyle(
@@ -310,7 +310,6 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                                     ),
                                     tooltip: 'المزيد',
                                     onPressed: () {
-                                      // TODO: Show context menu
                                     },
                                   ),
                                 ],
@@ -359,11 +358,11 @@ class _UsersPageState extends ConsumerState<UsersPage> {
         vertical: 4,
       ), // Slimmer
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08), // Lighter background
+        color: color.withValues(alpha: 0.08), // Lighter background
         borderRadius: BorderRadius.circular(
           6,
         ), // Less rounded - more square like reference
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
@@ -384,9 +383,9 @@ class _UsersPageState extends ConsumerState<UsersPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         isVerified ? 'مفعّل' : 'غير مفعّل',

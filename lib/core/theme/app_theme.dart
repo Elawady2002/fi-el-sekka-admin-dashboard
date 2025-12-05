@@ -20,15 +20,13 @@ class AppTheme {
         primary: primaryBlue,
         secondary: secondaryGray,
         surface: surfaceWhite,
-        background: backgroundLight,
         error: errorRed,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: textPrimary,
-        onBackground: textPrimary,
         onError: Colors.white,
         outline: borderLight,
-        outlineVariant: borderLight.withOpacity(0.5),
+        outlineVariant: borderLight.withValues(alpha: 0.5),
       ),
       scaffoldBackgroundColor: backgroundLight,
 
@@ -40,7 +38,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: borderLight, width: 1),
         ),
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
 
       // AppBar theme
@@ -217,7 +215,6 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     // For now, return light theme
-    // TODO: Implement dark theme
     return lightTheme;
   }
 }

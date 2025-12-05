@@ -112,7 +112,7 @@ class DashboardPage extends ConsumerWidget {
               );
             },
             loading: () => const SizedBox(height: 150),
-            error: (_, __) => const SizedBox(height: 150),
+            error: (_, _) => const SizedBox(height: 150),
           ),
 
           const SizedBox(height: 32),
@@ -277,7 +277,7 @@ class _FolderCardState extends State<_FolderCard>
                                           'إدارة ${widget.title}',
                                           style: TextStyle(
                                             fontSize: 13,
-                                            color: Colors.white.withOpacity(
+                                            color: Colors.white.withValues(alpha: 
                                               0.9,
                                             ),
                                             fontWeight: FontWeight.w400,
@@ -292,7 +292,7 @@ class _FolderCardState extends State<_FolderCard>
                                     children: [
                                       Icon(
                                         Icons.more_vert_rounded,
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withValues(alpha: 0.9),
                                         size: 24,
                                       ),
                                     ],
@@ -413,7 +413,7 @@ class _ProfessionalFolderPainter extends CustomPainter {
     // Dynamic Shadow
     final double elevation = 4.0 + (animationValue * 8.0);
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.15 + (animationValue * 0.1))
+      ..color = Colors.black.withValues(alpha: 0.15 + (animationValue * 0.1))
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, elevation * 1.5);
 
     // Draw shadow first
@@ -452,8 +452,8 @@ class _ProfessionalFolderPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withOpacity(0.20), // Slightly stronger to be visible
-          Colors.white.withOpacity(0.0),
+          Colors.white.withValues(alpha: 0.20), // Slightly stronger to be visible
+          Colors.white.withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromLTWH(0, frontPanelTopY, drawWidth, 100));
 
@@ -462,7 +462,7 @@ class _ProfessionalFolderPainter extends CustomPainter {
     // Top Edge Highlight (Inner stroke for 3D effect)
     final edgePaint = Paint()
       ..color = Colors.white
-          .withOpacity(0.4) // Slightly more visible
+          .withValues(alpha: 0.4) // Slightly more visible
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -564,7 +564,7 @@ class _ActivityItem extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: event.color.withOpacity(0.1),
+              color: event.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(event.icon, color: event.color, size: 20),

@@ -94,7 +94,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
           statsAsync.when(
             data: (stats) => _buildStatsCards(context, stats),
             loading: () => const SizedBox(height: 120),
-            error: (_, __) => const SizedBox(height: 120),
+            error: (_, _) => const SizedBox(height: 120),
           ),
 
           const SizedBox(height: 24),
@@ -136,7 +136,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<TripStatus?>(
-                    value: _selectedStatus,
+                    initialValue: _selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'الحالة',
                       filled: true,
@@ -151,21 +151,21 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(value: null, child: Text('الكل')),
+                      DropdownMenuItem(initialValue: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        value: TripStatus.scheduled,
+                        initialValue: TripStatus.scheduled,
                         child: Text('مجدول'),
                       ),
                       DropdownMenuItem(
-                        value: TripStatus.inProgress,
+                        initialValue: TripStatus.inProgress,
                         child: Text('جاري'),
                       ),
                       DropdownMenuItem(
-                        value: TripStatus.completed,
+                        initialValue: TripStatus.completed,
                         child: Text('مكتمل'),
                       ),
                       DropdownMenuItem(
-                        value: TripStatus.cancelled,
+                        initialValue: TripStatus.cancelled,
                         child: Text('ملغي'),
                       ),
                     ],
@@ -235,7 +235,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                       columnSpacing: 24,
                       horizontalMargin: 24,
                       minWidth: 1000,
-                      headingRowColor: MaterialStateProperty.all(
+                      headingRowColor: WidgetStateProperty.all(
                         const Color(0xFFF8F9FA),
                       ),
                       headingTextStyle: const TextStyle(
@@ -276,19 +276,19 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                                   color: trip.availableSeats > 0
                                       ? const Color(
                                           0xFF4CAF50,
-                                        ).withOpacity(0.08)
+                                        ).withValues(alpha: 0.08)
                                       : const Color(
                                           0xFFEF5350,
-                                        ).withOpacity(0.08),
+                                        ).withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: trip.availableSeats > 0
                                         ? const Color(
                                             0xFF4CAF50,
-                                          ).withOpacity(0.2)
+                                          ).withValues(alpha: 0.2)
                                         : const Color(
                                             0xFFEF5350,
-                                          ).withOpacity(0.2),
+                                          ).withValues(alpha: 0.2),
                                   ),
                                 ),
                                 child: Text(
@@ -326,7 +326,6 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                                     ),
                                     tooltip: 'المزيد',
                                     onPressed: () {
-                                      // TODO: Show context menu
                                     },
                                   ),
                                 ],
@@ -385,7 +384,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
           Expanded(
             child: _StatCard(
               title: 'إجمالي الرحلات',
-              value: stats.total.toString(),
+              initialValue: stats.total.toString(),
               icon: Icons.directions_bus,
               color: const Color(0xFF2196F3),
             ),
@@ -394,7 +393,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
           Expanded(
             child: _StatCard(
               title: 'الرحلات المجدولة',
-              value: stats.scheduled.toString(),
+              initialValue: stats.scheduled.toString(),
               icon: Icons.schedule,
               color: const Color(0xFF4CAF50),
             ),
@@ -403,7 +402,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
           Expanded(
             child: _StatCard(
               title: 'الرحلات الجارية',
-              value: stats.inProgress.toString(),
+              initialValue: stats.inProgress.toString(),
               icon: Icons.play_circle,
               color: const Color(0xFFFF9800),
             ),
@@ -412,7 +411,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
           Expanded(
             child: _StatCard(
               title: 'رحلات اليوم',
-              value: stats.todayTrips.toString(),
+              initialValue: stats.todayTrips.toString(),
               icon: Icons.today,
               color: const Color(0xFF9C27B0),
             ),
@@ -442,9 +441,9 @@ class _TripsPageState extends ConsumerState<TripsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         status.displayName,
@@ -532,7 +531,7 @@ class _StatCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.2)),
+        side: BorderSide(color: color.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -541,7 +540,7 @@ class _StatCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 24),

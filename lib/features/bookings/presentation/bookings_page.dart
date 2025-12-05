@@ -95,7 +95,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
           statsAsync.when(
             data: (stats) => _buildStatsCards(context, stats),
             loading: () => const SizedBox(height: 120),
-            error: (_, __) => const SizedBox(height: 120),
+            error: (_, _) => const SizedBox(height: 120),
           ),
 
           const SizedBox(height: 24),
@@ -137,7 +137,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<TripType?>(
-                    value: _selectedTripType,
+                    initialValue: _selectedTripType,
                     decoration: InputDecoration(
                       labelText: 'نوع الرحلة',
                       filled: true,
@@ -152,17 +152,17 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(value: null, child: Text('الكل')),
+                      DropdownMenuItem(initialValue: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        value: TripType.departureOnly,
+                        initialValue: TripType.departureOnly,
                         child: Text('ذهاب فقط'),
                       ),
                       DropdownMenuItem(
-                        value: TripType.returnOnly,
+                        initialValue: TripType.returnOnly,
                         child: Text('عودة فقط'),
                       ),
                       DropdownMenuItem(
-                        value: TripType.roundTrip,
+                        initialValue: TripType.roundTrip,
                         child: Text('ذهاب وعودة'),
                       ),
                     ],
@@ -176,7 +176,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<BookingStatus?>(
-                    value: _selectedStatus,
+                    initialValue: _selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'الحالة',
                       filled: true,
@@ -191,17 +191,17 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(value: null, child: Text('الكل')),
+                      DropdownMenuItem(initialValue: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        value: BookingStatus.confirmed,
+                        initialValue: BookingStatus.confirmed,
                         child: Text('مؤكد'),
                       ),
                       DropdownMenuItem(
-                        value: BookingStatus.completed,
+                        initialValue: BookingStatus.completed,
                         child: Text('مكتمل'),
                       ),
                       DropdownMenuItem(
-                        value: BookingStatus.cancelled,
+                        initialValue: BookingStatus.cancelled,
                         child: Text('ملغي'),
                       ),
                     ],
@@ -275,7 +275,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                       columnSpacing: 24,
                       horizontalMargin: 24,
                       minWidth: 1000,
-                      headingRowColor: MaterialStateProperty.all(
+                      headingRowColor: WidgetStateProperty.all(
                         const Color(0xFFF8F9FA),
                       ),
                       headingTextStyle: const TextStyle(
@@ -361,7 +361,6 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                                     ),
                                     tooltip: 'المزيد',
                                     onPressed: () {
-                                      // TODO: Show context menu
                                     },
                                   ),
                                 ],
@@ -420,7 +419,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
           Expanded(
             child: _StatCard(
               title: 'إجمالي الحجوزات',
-              value: stats.total.toString(),
+              initialValue: stats.total.toString(),
               icon: Icons.event_note,
               color: const Color(0xFF2196F3),
             ),
@@ -429,7 +428,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
           Expanded(
             child: _StatCard(
               title: 'الحجوزات المؤكدة',
-              value: stats.confirmed.toString(),
+              initialValue: stats.confirmed.toString(),
               icon: Icons.check_circle,
               color: const Color(0xFF4CAF50),
             ),
@@ -438,7 +437,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
           Expanded(
             child: _StatCard(
               title: 'الحجوزات المكتملة',
-              value: stats.completed.toString(),
+              initialValue: stats.completed.toString(),
               icon: Icons.done_all,
               color: const Color(0xFF9C27B0),
             ),
@@ -447,7 +446,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
           Expanded(
             child: _StatCard(
               title: 'إجمالي الإيرادات',
-              value: '${stats.totalRevenue.toStringAsFixed(0)} ج.م',
+              initialValue: '${stats.totalRevenue.toStringAsFixed(0)} ج.م',
               icon: Icons.attach_money,
               color: const Color(0xFFFF9800),
             ),
@@ -474,9 +473,9 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         type.displayName,
@@ -506,9 +505,9 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         status.displayName,
@@ -598,7 +597,7 @@ class _StatCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.2)),
+        side: BorderSide(color: color.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -607,7 +606,7 @@ class _StatCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 24),
