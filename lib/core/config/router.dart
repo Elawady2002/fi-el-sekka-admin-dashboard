@@ -5,6 +5,7 @@ import 'package:dashboard_fi_el_sekka/features/auth/presentation/auth_provider.d
 import 'package:dashboard_fi_el_sekka/features/auth/presentation/login_page.dart';
 import 'package:dashboard_fi_el_sekka/features/dashboard/presentation/dashboard_page.dart';
 import 'package:dashboard_fi_el_sekka/features/users/presentation/users_page.dart';
+import 'package:dashboard_fi_el_sekka/core/widgets/dashboard_layout.dart';
 
 // Notifier to trigger router refresh
 class RouterNotifier extends ChangeNotifier {
@@ -49,8 +50,45 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-      GoRoute(path: '/', builder: (context, state) => const DashboardPage()),
-      GoRoute(path: '/users', builder: (context, state) => const UsersPage()),
+      ShellRoute(
+        builder: (context, state, child) {
+          return DashboardLayout(child: child);
+        },
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const DashboardPage(),
+          ),
+          GoRoute(
+            path: '/users',
+            builder: (context, state) => const UsersPage(),
+          ),
+          GoRoute(
+            path: '/subscriptions',
+            builder: (context, state) => const Scaffold(
+              body: Center(child: Text('Subscriptions - Coming Soon')),
+            ),
+          ),
+          GoRoute(
+            path: '/trips',
+            builder: (context, state) => const Scaffold(
+              body: Center(child: Text('Trips - Coming Soon')),
+            ),
+          ),
+          GoRoute(
+            path: '/bookings',
+            builder: (context, state) => const Scaffold(
+              body: Center(child: Text('Bookings - Coming Soon')),
+            ),
+          ),
+          GoRoute(
+            path: '/finance',
+            builder: (context, state) => const Scaffold(
+              body: Center(child: Text('Finance - Coming Soon')),
+            ),
+          ),
+        ],
+      ),
     ],
   );
 });
