@@ -5,6 +5,7 @@ import 'package:dashboard_fi_el_sekka/features/auth/presentation/auth_provider.d
 import 'package:dashboard_fi_el_sekka/features/auth/presentation/login_page.dart';
 import 'package:dashboard_fi_el_sekka/features/dashboard/presentation/dashboard_page.dart';
 import 'package:dashboard_fi_el_sekka/features/users/presentation/users_page.dart';
+import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_page.dart';
 import 'package:dashboard_fi_el_sekka/core/widgets/dashboard_layout.dart';
 
 // Notifier to trigger router refresh
@@ -65,9 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/subscriptions',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Subscriptions - Coming Soon')),
-            ),
+            builder: (context, state) => const SubscriptionsPage(),
           ),
           GoRoute(
             path: '/trips',
