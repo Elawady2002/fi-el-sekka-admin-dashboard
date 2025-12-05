@@ -78,31 +78,19 @@ class _ModernSidebar extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primaryBlue,
-                        AppTheme.primaryBlue.withOpacity(0.7),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.directions_bus,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'في السكة',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
+                // Logo Image
+                Image.network(
+                  'logo.png',
+                  height: 45,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Logo error: $error');
+                    return const Icon(
+                      Icons.directions_bus,
+                      size: 40,
+                      color: Colors.blue,
+                    );
+                  },
                 ),
               ],
             ),

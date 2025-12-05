@@ -50,6 +50,7 @@ class AppTheme {
         foregroundColor: textPrimary,
         centerTitle: false,
         titleTextStyle: TextStyle(
+          fontFamily: 'PingAR',
           color: textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -108,79 +109,94 @@ class AppTheme {
         ),
       ),
 
-      // Typography
+      // Typography with PingAR font
       textTheme: const TextTheme(
         displayLarge: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
         displayMedium: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
         displaySmall: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
         headlineLarge: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         headlineMedium: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         headlineSmall: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleLarge: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleMedium: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleSmall: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         bodyLarge: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimary,
         ),
         bodyMedium: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textPrimary,
         ),
         bodySmall: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textSecondary,
         ),
         labelLarge: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
         labelMedium: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
         labelSmall: TextStyle(
+          fontFamily: 'PingAR',
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: textSecondary,

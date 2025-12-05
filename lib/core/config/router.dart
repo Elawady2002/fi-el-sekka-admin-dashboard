@@ -6,6 +6,8 @@ import 'package:dashboard_fi_el_sekka/features/auth/presentation/login_page.dart
 import 'package:dashboard_fi_el_sekka/features/dashboard/presentation/dashboard_page.dart';
 import 'package:dashboard_fi_el_sekka/features/users/presentation/users_page.dart';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_page.dart';
+import 'package:dashboard_fi_el_sekka/features/bookings/presentation/bookings_page.dart';
+import 'package:dashboard_fi_el_sekka/features/trips/presentation/trips_page.dart';
 import 'package:dashboard_fi_el_sekka/core/widgets/dashboard_layout.dart';
 
 // Notifier to trigger router refresh
@@ -70,15 +72,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/trips',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Trips - Coming Soon')),
-            ),
+            builder: (context, state) => const TripsPage(),
           ),
           GoRoute(
             path: '/bookings',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Bookings - Coming Soon')),
-            ),
+            builder: (context, state) => const BookingsPage(),
           ),
           GoRoute(
             path: '/finance',

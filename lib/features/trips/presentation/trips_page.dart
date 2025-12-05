@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_provider.dart';
-import 'package:dashboard_fi_el_sekka/features/subscriptions/domain/subscription_entity.dart';
+import 'package:dashboard_fi_el_sekka/features/trips/presentation/trips_provider.dart';
+import 'package:dashboard_fi_el_sekka/features/trips/domain/trip_entity.dart';
 import 'package:data_table_2/data_table_2.dart';
 
-class SubscriptionsPage extends ConsumerStatefulWidget {
-  const SubscriptionsPage({super.key});
+class TripsPage extends ConsumerStatefulWidget {
+  const TripsPage({super.key});
 
   @override
-  ConsumerState<SubscriptionsPage> createState() => _SubscriptionsPageState();
+  ConsumerState<TripsPage> createState() => _TripsPageState();
 }
 
-class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
+class _TripsPageState extends ConsumerState<TripsPage> {
   String _searchQuery = '';
-  SubscriptionType? _selectedType;
-  SubscriptionStatus? _selectedStatus;
+  TripStatus? _selectedStatus;
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionsAsync = ref.watch(subscriptionsProvider);
-    final statsAsync = ref.watch(subscriptionStatsProvider);
+    final tripsAsync = ref.watch(tripsProvider);
+    final statsAsync = ref.watch(tripStatsProvider);
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -40,7 +39,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                 child: Icon(Icons.chevron_right, size: 16, color: Colors.grey),
               ),
               Text(
-                'الاشتراكات',
+                'الرحلات والمواعيد',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
@@ -58,13 +57,13 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'إدارة الاشتراكات',
+                      'إدارة الرحلات والمواعيد',
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'عرض وإدارة جميع اشتراكات الطلاب',
+                      'عرض وإدارة جميع الرحلات والجداول الزمنية',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -75,11 +74,17 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
               FilledButton.icon(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('قريباً - إضافة اشتراك جديد')),
+                    const SnackBar(content: Text('قريباً - إضافة رحلة جديدة')),
                   );
                 },
-                icon: const Icon(Icons.add),
-                label: const Text('إضافة اشتراك'),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('إضافة رحلة'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
               ),
             ],
           ),
@@ -108,7 +113,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                   flex: 2,
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'بحث بالاسم أو البريد الإلكتروني...',
+                      hintText: 'بحث بالسائق أو المعرف...',
                       prefixIcon: const Icon(Icons.search, color: Colors.grey),
                       filled: true,
                       fillColor: const Color(0xFFF8F9FA),
@@ -130,46 +135,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<SubscriptionType?>(
-                    value: _selectedType,
-                    decoration: InputDecoration(
-                      labelText: 'نوع الاشتراك',
-                      filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: null, child: Text('الكل')),
-                      DropdownMenuItem(
-                        value: SubscriptionType.monthly,
-                        child: Text('شهري'),
-                      ),
-                      DropdownMenuItem(
-                        value: SubscriptionType.semester,
-                        child: Text('ترم دراسي'),
-                      ),
-                      DropdownMenuItem(
-                        value: SubscriptionType.yearly,
-                        child: Text('سنوي'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<SubscriptionStatus?>(
+                  child: DropdownButtonFormField<TripStatus?>(
                     value: _selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'الحالة',
@@ -187,16 +153,20 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                     items: const [
                       DropdownMenuItem(value: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        value: SubscriptionStatus.active,
-                        child: Text('نشط'),
+                        value: TripStatus.scheduled,
+                        child: Text('مجدول'),
                       ),
                       DropdownMenuItem(
-                        value: SubscriptionStatus.expired,
-                        child: Text('منتهي'),
+                        value: TripStatus.inProgress,
+                        child: Text('جاري'),
                       ),
                       DropdownMenuItem(
-                        value: SubscriptionStatus.pending,
-                        child: Text('قيد الانتظار'),
+                        value: TripStatus.completed,
+                        child: Text('مكتمل'),
+                      ),
+                      DropdownMenuItem(
+                        value: TripStatus.cancelled,
+                        child: Text('ملغي'),
                       ),
                     ],
                     onChanged: (value) {
@@ -221,35 +191,40 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: subscriptionsAsync.when(
-                  data: (subscriptions) {
+                child: tripsAsync.when(
+                  data: (trips) {
                     // Apply filters
-                    var filteredSubs = subscriptions.where((sub) {
+                    var filteredTrips = trips.where((trip) {
                       final matchesSearch =
-                          sub.userName.toLowerCase().contains(_searchQuery) ||
-                          sub.userEmail.toLowerCase().contains(_searchQuery);
-                      final matchesType =
-                          _selectedType == null || sub.type == _selectedType;
+                          (trip.driverName?.toLowerCase().contains(
+                                _searchQuery,
+                              ) ??
+                              false) ||
+                          trip.id.toLowerCase().contains(_searchQuery);
                       final matchesStatus =
                           _selectedStatus == null ||
-                          sub.status == _selectedStatus;
-                      return matchesSearch && matchesType && matchesStatus;
+                          trip.status == _selectedStatus;
+                      return matchesSearch && matchesStatus;
                     }).toList();
 
-                    if (filteredSubs.isEmpty) {
+                    if (filteredTrips.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.card_membership_outlined,
+                              Icons.directions_bus_outlined,
                               size: 64,
-                              color: Theme.of(context).colorScheme.outline,
+                              color: Colors.grey[300],
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'لا يوجد اشتراكات',
-                              style: Theme.of(context).textTheme.titleMedium,
+                              'لا يوجد رحلات',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -268,94 +243,67 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                         color: Color(0xFF495057),
                       ),
                       columns: const [
-                        DataColumn2(
-                          label: Text(
-                            'المستخدم',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          size: ColumnSize.L,
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'النوع',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'الحالة',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'تاريخ البدء',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'تاريخ الانتهاء',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'المبلغ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'إجراءات',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          size: ColumnSize.S,
-                        ),
+                        DataColumn2(label: Text('التاريخ'), size: ColumnSize.M),
+                        DataColumn2(label: Text('السائق')),
+                        DataColumn2(label: Text('وقت الذهاب')),
+                        DataColumn2(label: Text('وقت العودة')),
+                        DataColumn2(label: Text('المقاعد المتاحة')),
+                        DataColumn2(label: Text('الحالة')),
+                        DataColumn2(label: Text('تحكم'), size: ColumnSize.S),
                       ],
-                      rows: filteredSubs.map((sub) {
+                      rows: filteredTrips.map((trip) {
                         return DataRow2(
+                          onTap: () => _showTripDetails(context, trip),
                           cells: [
                             DataCell(
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    sub.userName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    sub.userEmail,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            DataCell(_buildTypeBadge(context, sub.type)),
-                            DataCell(_buildStatusBadge(context, sub.status)),
-                            DataCell(
                               Text(
-                                '${sub.startDate.year}-${sub.startDate.month.toString().padLeft(2, '0')}-${sub.startDate.day.toString().padLeft(2, '0')}',
+                                '${trip.tripDate.year}-${trip.tripDate.month.toString().padLeft(2, '0')}-${trip.tripDate.day.toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
+                            DataCell(Text(trip.driverName ?? 'غير محدد')),
+                            DataCell(Text(trip.departureTime ?? '-')),
+                            DataCell(Text(trip.returnTime ?? '-')),
                             DataCell(
-                              Text(
-                                '${sub.endDate.year}-${sub.endDate.month.toString().padLeft(2, '0')}-${sub.endDate.day.toString().padLeft(2, '0')}',
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: trip.availableSeats > 0
+                                      ? const Color(
+                                          0xFF4CAF50,
+                                        ).withOpacity(0.08)
+                                      : const Color(
+                                          0xFFEF5350,
+                                        ).withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: trip.availableSeats > 0
+                                        ? const Color(
+                                            0xFF4CAF50,
+                                          ).withOpacity(0.2)
+                                        : const Color(
+                                            0xFFEF5350,
+                                          ).withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Text(
+                                  trip.availableSeats.toString(),
+                                  style: TextStyle(
+                                    color: trip.availableSeats > 0
+                                        ? const Color(0xFF4CAF50)
+                                        : const Color(0xFFEF5350),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
-                            DataCell(
-                              Text('${sub.amount.toStringAsFixed(0)} ج.م'),
-                            ),
+                            DataCell(_buildStatusBadge(context, trip.status)),
                             DataCell(
                               Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -363,29 +311,22 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                                   IconButton(
                                     icon: const Icon(
                                       Icons.visibility_outlined,
-                                      size: 20,
+                                      size: 18,
+                                      color: Colors.grey,
                                     ),
-                                    tooltip: 'عرض التفاصيل',
-                                    onPressed: () {
-                                      _showSubscriptionDetails(context, sub);
-                                    },
+                                    tooltip: 'عرض',
+                                    onPressed: () =>
+                                        _showTripDetails(context, trip),
                                   ),
                                   IconButton(
                                     icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 20,
+                                      Icons.more_vert,
+                                      size: 18,
+                                      color: Colors.grey,
                                     ),
-                                    tooltip: 'تعديل',
+                                    tooltip: 'المزيد',
                                     onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'قريباً - تعديل الاشتراك',
-                                          ),
-                                        ),
-                                      );
+                                      // TODO: Show context menu
                                     },
                                   ),
                                 ],
@@ -409,7 +350,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'حدث خطأ في تحميل الاشتراكات',
+                          'حدث خطأ في تحميل الرحلات',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
@@ -420,8 +361,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                         ),
                         const SizedBox(height: 16),
                         FilledButton.icon(
-                          onPressed: () =>
-                              ref.invalidate(subscriptionsProvider),
+                          onPressed: () => ref.invalidate(tripsProvider),
                           icon: const Icon(Icons.refresh),
                           label: const Text('إعادة المحاولة'),
                         ),
@@ -437,43 +377,43 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     );
   }
 
-  Widget _buildStatsCards(BuildContext context, SubscriptionStats stats) {
+  Widget _buildStatsCards(BuildContext context, TripStats stats) {
     return SizedBox(
       height: 120,
       child: Row(
         children: [
           Expanded(
             child: _StatCard(
-              title: 'إجمالي الاشتراكات',
+              title: 'إجمالي الرحلات',
               value: stats.total.toString(),
-              icon: Icons.card_membership,
+              icon: Icons.directions_bus,
               color: const Color(0xFF2196F3),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: _StatCard(
-              title: 'الاشتراكات النشطة',
-              value: stats.active.toString(),
-              icon: Icons.check_circle,
+              title: 'الرحلات المجدولة',
+              value: stats.scheduled.toString(),
+              icon: Icons.schedule,
               color: const Color(0xFF4CAF50),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: _StatCard(
-              title: 'الاشتراكات المنتهية',
-              value: stats.expired.toString(),
-              icon: Icons.cancel,
-              color: const Color(0xFFEF5350),
+              title: 'الرحلات الجارية',
+              value: stats.inProgress.toString(),
+              icon: Icons.play_circle,
+              color: const Color(0xFFFF9800),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: _StatCard(
-              title: 'الإيرادات الشهرية',
-              value: '${stats.monthlyRevenue.toStringAsFixed(0)} ج.م',
-              icon: Icons.attach_money,
+              title: 'رحلات اليوم',
+              value: stats.todayTrips.toString(),
+              icon: Icons.today,
               color: const Color(0xFF9C27B0),
             ),
           ),
@@ -482,58 +422,29 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     );
   }
 
-  Widget _buildTypeBadge(BuildContext context, SubscriptionType type) {
-    Color color;
-    switch (type) {
-      case SubscriptionType.monthly:
-        color = const Color(0xFF2196F3);
-        break;
-      case SubscriptionType.semester:
-        color = const Color(0xFFFF9800);
-        break;
-      case SubscriptionType.yearly:
-        color = const Color(0xFF9C27B0);
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        type.displayName,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(BuildContext context, SubscriptionStatus status) {
+  Widget _buildStatusBadge(BuildContext context, TripStatus status) {
     Color color;
     switch (status) {
-      case SubscriptionStatus.active:
+      case TripStatus.scheduled:
         color = const Color(0xFF4CAF50);
         break;
-      case SubscriptionStatus.expired:
-        color = const Color(0xFFEF5350);
-        break;
-      case SubscriptionStatus.pending:
+      case TripStatus.inProgress:
         color = const Color(0xFFFF9800);
+        break;
+      case TripStatus.completed:
+        color = const Color(0xFF2196F3);
+        break;
+      case TripStatus.cancelled:
+        color = const Color(0xFFEF5350);
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
         status.displayName,
@@ -546,33 +457,29 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     );
   }
 
-  void _showSubscriptionDetails(BuildContext context, SubscriptionEntity sub) {
+  void _showTripDetails(BuildContext context, TripEntity trip) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('تفاصيل الاشتراك'),
+        title: const Text('تفاصيل الرحلة'),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('المستخدم', sub.userName),
-              _buildDetailRow('البريد الإلكتروني', sub.userEmail),
-              _buildDetailRow('نوع الاشتراك', sub.type.displayName),
-              _buildDetailRow('الحالة', sub.status.displayName),
               _buildDetailRow(
-                'تاريخ البدء',
-                '${sub.startDate.year}-${sub.startDate.month.toString().padLeft(2, '0')}-${sub.startDate.day.toString().padLeft(2, '0')}',
+                'التاريخ',
+                '${trip.tripDate.year}-${trip.tripDate.month.toString().padLeft(2, '0')}-${trip.tripDate.day.toString().padLeft(2, '0')}',
               ),
+              _buildDetailRow('السائق', trip.driverName ?? 'غير محدد'),
+              _buildDetailRow('وقت الذهاب', trip.departureTime ?? '-'),
+              _buildDetailRow('وقت العودة', trip.returnTime ?? '-'),
               _buildDetailRow(
-                'تاريخ الانتهاء',
-                '${sub.endDate.year}-${sub.endDate.month.toString().padLeft(2, '0')}-${sub.endDate.day.toString().padLeft(2, '0')}',
+                'المقاعد المتاحة',
+                trip.availableSeats.toString(),
               ),
-              _buildDetailRow('المبلغ', '${sub.amount.toStringAsFixed(2)} ج.م'),
-              _buildDetailRow('أقساط', sub.isInstallment ? 'نعم' : 'لا'),
-              if (sub.isActive)
-                _buildDetailRow('الأيام المتبقية', '${sub.daysRemaining} يوم'),
+              _buildDetailRow('الحالة', trip.status.displayName),
             ],
           ),
         ),

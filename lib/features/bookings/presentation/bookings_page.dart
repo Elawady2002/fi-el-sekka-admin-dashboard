@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_provider.dart';
-import 'package:dashboard_fi_el_sekka/features/subscriptions/domain/subscription_entity.dart';
+import 'package:dashboard_fi_el_sekka/features/bookings/presentation/bookings_provider.dart';
+import 'package:dashboard_fi_el_sekka/features/bookings/domain/booking_entity.dart';
 import 'package:data_table_2/data_table_2.dart';
 
-class SubscriptionsPage extends ConsumerStatefulWidget {
-  const SubscriptionsPage({super.key});
+class BookingsPage extends ConsumerStatefulWidget {
+  const BookingsPage({super.key});
 
   @override
-  ConsumerState<SubscriptionsPage> createState() => _SubscriptionsPageState();
+  ConsumerState<BookingsPage> createState() => _BookingsPageState();
 }
 
-class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
+class _BookingsPageState extends ConsumerState<BookingsPage> {
   String _searchQuery = '';
-  SubscriptionType? _selectedType;
-  SubscriptionStatus? _selectedStatus;
+  TripType? _selectedTripType;
+  BookingStatus? _selectedStatus;
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionsAsync = ref.watch(subscriptionsProvider);
-    final statsAsync = ref.watch(subscriptionStatsProvider);
+    final bookingsAsync = ref.watch(bookingsProvider);
+    final statsAsync = ref.watch(bookingStatsProvider);
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -40,7 +40,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                 child: Icon(Icons.chevron_right, size: 16, color: Colors.grey),
               ),
               Text(
-                'الاشتراكات',
+                'الحجوزات',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
@@ -58,13 +58,13 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'إدارة الاشتراكات',
+                      'إدارة الحجوزات',
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'عرض وإدارة جميع اشتراكات الطلاب',
+                      'عرض وإدارة جميع حجوزات الرحلات',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -75,11 +75,17 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
               FilledButton.icon(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('قريباً - إضافة اشتراك جديد')),
+                    const SnackBar(content: Text('قريباً - إضافة حجز جديد')),
                   );
                 },
-                icon: const Icon(Icons.add),
-                label: const Text('إضافة اشتراك'),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('إضافة حجز'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
               ),
             ],
           ),
@@ -108,7 +114,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                   flex: 2,
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'بحث بالاسم أو البريد الإلكتروني...',
+                      hintText: 'بحث بالاسم أو البريد...',
                       prefixIcon: const Icon(Icons.search, color: Colors.grey),
                       filled: true,
                       fillColor: const Color(0xFFF8F9FA),
@@ -130,10 +136,10 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<SubscriptionType?>(
-                    value: _selectedType,
+                  child: DropdownButtonFormField<TripType?>(
+                    value: _selectedTripType,
                     decoration: InputDecoration(
-                      labelText: 'نوع الاشتراك',
+                      labelText: 'نوع الرحلة',
                       filled: true,
                       fillColor: const Color(0xFFF8F9FA),
                       border: OutlineInputBorder(
@@ -148,28 +154,28 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                     items: const [
                       DropdownMenuItem(value: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        value: SubscriptionType.monthly,
-                        child: Text('شهري'),
+                        value: TripType.departureOnly,
+                        child: Text('ذهاب فقط'),
                       ),
                       DropdownMenuItem(
-                        value: SubscriptionType.semester,
-                        child: Text('ترم دراسي'),
+                        value: TripType.returnOnly,
+                        child: Text('عودة فقط'),
                       ),
                       DropdownMenuItem(
-                        value: SubscriptionType.yearly,
-                        child: Text('سنوي'),
+                        value: TripType.roundTrip,
+                        child: Text('ذهاب وعودة'),
                       ),
                     ],
                     onChanged: (value) {
                       setState(() {
-                        _selectedType = value;
+                        _selectedTripType = value;
                       });
                     },
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<SubscriptionStatus?>(
+                  child: DropdownButtonFormField<BookingStatus?>(
                     value: _selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'الحالة',
@@ -187,16 +193,16 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                     items: const [
                       DropdownMenuItem(value: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        value: SubscriptionStatus.active,
-                        child: Text('نشط'),
+                        value: BookingStatus.confirmed,
+                        child: Text('مؤكد'),
                       ),
                       DropdownMenuItem(
-                        value: SubscriptionStatus.expired,
-                        child: Text('منتهي'),
+                        value: BookingStatus.completed,
+                        child: Text('مكتمل'),
                       ),
                       DropdownMenuItem(
-                        value: SubscriptionStatus.pending,
-                        child: Text('قيد الانتظار'),
+                        value: BookingStatus.cancelled,
+                        child: Text('ملغي'),
                       ),
                     ],
                     onChanged: (value) {
@@ -221,35 +227,44 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: subscriptionsAsync.when(
-                  data: (subscriptions) {
+                child: bookingsAsync.when(
+                  data: (bookings) {
                     // Apply filters
-                    var filteredSubs = subscriptions.where((sub) {
+                    var filteredBookings = bookings.where((booking) {
                       final matchesSearch =
-                          sub.userName.toLowerCase().contains(_searchQuery) ||
-                          sub.userEmail.toLowerCase().contains(_searchQuery);
+                          booking.userName.toLowerCase().contains(
+                            _searchQuery,
+                          ) ||
+                          booking.userEmail.toLowerCase().contains(
+                            _searchQuery,
+                          );
                       final matchesType =
-                          _selectedType == null || sub.type == _selectedType;
+                          _selectedTripType == null ||
+                          booking.tripType == _selectedTripType;
                       final matchesStatus =
                           _selectedStatus == null ||
-                          sub.status == _selectedStatus;
+                          booking.status == _selectedStatus;
                       return matchesSearch && matchesType && matchesStatus;
                     }).toList();
 
-                    if (filteredSubs.isEmpty) {
+                    if (filteredBookings.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.card_membership_outlined,
+                              Icons.event_busy_outlined,
                               size: 64,
-                              color: Theme.of(context).colorScheme.outline,
+                              color: Colors.grey[300],
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'لا يوجد اشتراكات',
-                              style: Theme.of(context).textTheme.titleMedium,
+                              'لا يوجد حجوزات',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -269,52 +284,20 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                       ),
                       columns: const [
                         DataColumn2(
-                          label: Text(
-                            'المستخدم',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          label: Text('المستخدم'),
                           size: ColumnSize.L,
                         ),
-                        DataColumn2(
-                          label: Text(
-                            'النوع',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'الحالة',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'تاريخ البدء',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'تاريخ الانتهاء',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'المبلغ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'إجراءات',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          size: ColumnSize.S,
-                        ),
+                        DataColumn2(label: Text('نوع الرحلة')),
+                        DataColumn2(label: Text('الحالة')),
+                        DataColumn2(label: Text('وقت الذهاب')),
+                        DataColumn2(label: Text('وقت العودة')),
+                        DataColumn2(label: Text('المبلغ')),
+                        DataColumn2(label: Text('التاريخ')),
+                        DataColumn2(label: Text('تحكم'), size: ColumnSize.S),
                       ],
-                      rows: filteredSubs.map((sub) {
+                      rows: filteredBookings.map((booking) {
                         return DataRow2(
+                          onTap: () => _showBookingDetails(context, booking),
                           cells: [
                             DataCell(
                               Column(
@@ -322,39 +305,39 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    sub.userName,
+                                    booking.userName,
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
-                                    sub.userEmail,
-                                    style: TextStyle(
+                                    booking.userEmail,
+                                    style: const TextStyle(
                                       fontSize: 12,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
+                                      color: Colors.grey,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
                             ),
-                            DataCell(_buildTypeBadge(context, sub.type)),
-                            DataCell(_buildStatusBadge(context, sub.status)),
                             DataCell(
-                              Text(
-                                '${sub.startDate.year}-${sub.startDate.month.toString().padLeft(2, '0')}-${sub.startDate.day.toString().padLeft(2, '0')}',
-                              ),
+                              _buildTripTypeBadge(context, booking.tripType),
+                            ),
+                            DataCell(
+                              _buildStatusBadge(context, booking.status),
+                            ),
+                            DataCell(Text(booking.departureTime ?? '-')),
+                            DataCell(Text(booking.returnTime ?? '-')),
+                            DataCell(
+                              Text('${booking.amount.toStringAsFixed(0)} ج.م'),
                             ),
                             DataCell(
                               Text(
-                                '${sub.endDate.year}-${sub.endDate.month.toString().padLeft(2, '0')}-${sub.endDate.day.toString().padLeft(2, '0')}',
+                                '${booking.createdAt.year}-${booking.createdAt.month.toString().padLeft(2, '0')}-${booking.createdAt.day.toString().padLeft(2, '0')}',
+                                style: const TextStyle(color: Colors.grey),
                               ),
-                            ),
-                            DataCell(
-                              Text('${sub.amount.toStringAsFixed(0)} ج.م'),
                             ),
                             DataCell(
                               Row(
@@ -363,29 +346,22 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                                   IconButton(
                                     icon: const Icon(
                                       Icons.visibility_outlined,
-                                      size: 20,
+                                      size: 18,
+                                      color: Colors.grey,
                                     ),
-                                    tooltip: 'عرض التفاصيل',
-                                    onPressed: () {
-                                      _showSubscriptionDetails(context, sub);
-                                    },
+                                    tooltip: 'عرض',
+                                    onPressed: () =>
+                                        _showBookingDetails(context, booking),
                                   ),
                                   IconButton(
                                     icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 20,
+                                      Icons.more_vert,
+                                      size: 18,
+                                      color: Colors.grey,
                                     ),
-                                    tooltip: 'تعديل',
+                                    tooltip: 'المزيد',
                                     onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'قريباً - تعديل الاشتراك',
-                                          ),
-                                        ),
-                                      );
+                                      // TODO: Show context menu
                                     },
                                   ),
                                 ],
@@ -409,7 +385,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'حدث خطأ في تحميل الاشتراكات',
+                          'حدث خطأ في تحميل الحجوزات',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
@@ -420,8 +396,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                         ),
                         const SizedBox(height: 16),
                         FilledButton.icon(
-                          onPressed: () =>
-                              ref.invalidate(subscriptionsProvider),
+                          onPressed: () => ref.invalidate(bookingsProvider),
                           icon: const Icon(Icons.refresh),
                           label: const Text('إعادة المحاولة'),
                         ),
@@ -437,24 +412,24 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     );
   }
 
-  Widget _buildStatsCards(BuildContext context, SubscriptionStats stats) {
+  Widget _buildStatsCards(BuildContext context, BookingStats stats) {
     return SizedBox(
       height: 120,
       child: Row(
         children: [
           Expanded(
             child: _StatCard(
-              title: 'إجمالي الاشتراكات',
+              title: 'إجمالي الحجوزات',
               value: stats.total.toString(),
-              icon: Icons.card_membership,
+              icon: Icons.event_note,
               color: const Color(0xFF2196F3),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: _StatCard(
-              title: 'الاشتراكات النشطة',
-              value: stats.active.toString(),
+              title: 'الحجوزات المؤكدة',
+              value: stats.confirmed.toString(),
               icon: Icons.check_circle,
               color: const Color(0xFF4CAF50),
             ),
@@ -462,19 +437,19 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           const SizedBox(width: 16),
           Expanded(
             child: _StatCard(
-              title: 'الاشتراكات المنتهية',
-              value: stats.expired.toString(),
-              icon: Icons.cancel,
-              color: const Color(0xFFEF5350),
+              title: 'الحجوزات المكتملة',
+              value: stats.completed.toString(),
+              icon: Icons.done_all,
+              color: const Color(0xFF9C27B0),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: _StatCard(
-              title: 'الإيرادات الشهرية',
-              value: '${stats.monthlyRevenue.toStringAsFixed(0)} ج.م',
+              title: 'إجمالي الإيرادات',
+              value: '${stats.totalRevenue.toStringAsFixed(0)} ج.م',
               icon: Icons.attach_money,
-              color: const Color(0xFF9C27B0),
+              color: const Color(0xFFFF9800),
             ),
           ),
         ],
@@ -482,26 +457,26 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     );
   }
 
-  Widget _buildTypeBadge(BuildContext context, SubscriptionType type) {
+  Widget _buildTripTypeBadge(BuildContext context, TripType type) {
     Color color;
     switch (type) {
-      case SubscriptionType.monthly:
+      case TripType.departureOnly:
         color = const Color(0xFF2196F3);
         break;
-      case SubscriptionType.semester:
+      case TripType.returnOnly:
         color = const Color(0xFFFF9800);
         break;
-      case SubscriptionType.yearly:
+      case TripType.roundTrip:
         color = const Color(0xFF9C27B0);
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
         type.displayName,
@@ -514,26 +489,26 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     );
   }
 
-  Widget _buildStatusBadge(BuildContext context, SubscriptionStatus status) {
+  Widget _buildStatusBadge(BuildContext context, BookingStatus status) {
     Color color;
     switch (status) {
-      case SubscriptionStatus.active:
+      case BookingStatus.confirmed:
         color = const Color(0xFF4CAF50);
         break;
-      case SubscriptionStatus.expired:
-        color = const Color(0xFFEF5350);
+      case BookingStatus.completed:
+        color = const Color(0xFF2196F3);
         break;
-      case SubscriptionStatus.pending:
-        color = const Color(0xFFFF9800);
+      case BookingStatus.cancelled:
+        color = const Color(0xFFEF5350);
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
         status.displayName,
@@ -546,33 +521,31 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     );
   }
 
-  void _showSubscriptionDetails(BuildContext context, SubscriptionEntity sub) {
+  void _showBookingDetails(BuildContext context, BookingEntity booking) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('تفاصيل الاشتراك'),
+        title: const Text('تفاصيل الحجز'),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('المستخدم', sub.userName),
-              _buildDetailRow('البريد الإلكتروني', sub.userEmail),
-              _buildDetailRow('نوع الاشتراك', sub.type.displayName),
-              _buildDetailRow('الحالة', sub.status.displayName),
+              _buildDetailRow('المستخدم', booking.userName),
+              _buildDetailRow('البريد الإلكتروني', booking.userEmail),
+              _buildDetailRow('نوع الرحلة', booking.tripType.displayName),
+              _buildDetailRow('الحالة', booking.status.displayName),
+              _buildDetailRow('وقت الذهاب', booking.departureTime ?? '-'),
+              _buildDetailRow('وقت العودة', booking.returnTime ?? '-'),
               _buildDetailRow(
-                'تاريخ البدء',
-                '${sub.startDate.year}-${sub.startDate.month.toString().padLeft(2, '0')}-${sub.startDate.day.toString().padLeft(2, '0')}',
+                'المبلغ',
+                '${booking.amount.toStringAsFixed(2)} ج.م',
               ),
               _buildDetailRow(
-                'تاريخ الانتهاء',
-                '${sub.endDate.year}-${sub.endDate.month.toString().padLeft(2, '0')}-${sub.endDate.day.toString().padLeft(2, '0')}',
+                'تاريخ الحجز',
+                '${booking.createdAt.year}-${booking.createdAt.month.toString().padLeft(2, '0')}-${booking.createdAt.day.toString().padLeft(2, '0')}',
               ),
-              _buildDetailRow('المبلغ', '${sub.amount.toStringAsFixed(2)} ج.م'),
-              _buildDetailRow('أقساط', sub.isInstallment ? 'نعم' : 'لا'),
-              if (sub.isActive)
-                _buildDetailRow('الأيام المتبقية', '${sub.daysRemaining} يوم'),
             ],
           ),
         ),
