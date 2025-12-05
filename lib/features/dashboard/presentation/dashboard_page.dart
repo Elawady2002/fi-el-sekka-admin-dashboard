@@ -339,7 +339,8 @@ class _EnhancedStatCard extends StatelessWidget {
   final IconData icon;
   final String? trend;
   final Color color;
-  final List<Color> gradientColors;
+  final List<Color>
+  gradientColors; // Kept for compatibility but unused in design
 
   const _EnhancedStatCard({
     required this.title,
@@ -354,19 +355,12 @@ class _EnhancedStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withOpacity(0.2), width: 1.5),
+        side: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [color.withOpacity(0.05), color.withOpacity(0.02)],
-          ),
-        ),
+      child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,51 +368,41 @@ class _EnhancedStatCard extends StatelessWidget {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradientColors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
-                  child: Icon(icon, color: Colors.white, size: 28),
+                  child: Icon(icon, color: color, size: 24),
                 ),
                 if (trend != null)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+                      horizontal: 8,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
+                      color: const Color(0xFFF1F8E9),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.trending_up,
+                        const Icon(
+                          Icons.arrow_upward_rounded,
                           size: 14,
-                          color: const Color(0xFF4CAF50),
+                          color: Color(0xFF43A047),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           trend!,
                           style: const TextStyle(
-                            color: Color(0xFF4CAF50),
+                            color: Color(0xFF43A047),
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -426,22 +410,24 @@ class _EnhancedStatCard extends StatelessWidget {
                   ),
               ],
             ),
+            const SizedBox(height: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
+                  value,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF212121),
+                    height: 1.0,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  value,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF757575),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -472,13 +458,14 @@ class _QuickActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
@@ -487,9 +474,9 @@ class _QuickActionCard extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -502,8 +489,10 @@ class _QuickActionCard extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF212121),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -511,17 +500,18 @@ class _QuickActionCard extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF757575),
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 18,
-                color: Theme.of(context).colorScheme.outline,
+                size: 16,
+                color: Color(0xFFBDBDBD),
               ),
             ],
           ),

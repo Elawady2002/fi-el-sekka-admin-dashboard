@@ -24,6 +24,30 @@ class _UsersPageState extends ConsumerState<UsersPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Breadcrumbs
+          Row(
+            children: [
+              Text(
+                'لوحة التحكم',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+              ),
+              Text(
+                'المستخدمين',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
           // Header
           Row(
             children: [
@@ -36,271 +60,270 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'عرض وإدارة جميع مستخدمي النظام',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
                   ],
                 ),
               ),
               FilledButton.icon(
                 onPressed: () {
-                  // TODO: Add user dialog
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('قريباً - إضافة مستخدم جديد')),
                   );
                 },
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add, size: 20),
                 label: const Text('إضافة مستخدم'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          // Filters
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'بحث بالاسم أو البريد الإلكتروني...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+          // Filters & Actions Bar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'بحث بالاسم أو البريد...',
+                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA), // Very light gray
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value.toLowerCase();
+                      });
+                    },
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value.toLowerCase();
-                    });
-                  },
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: DropdownButtonFormField<UserType?>(
-                  value: _selectedUserType,
-                  decoration: InputDecoration(
-                    labelText: 'نوع المستخدم',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<UserType?>(
+                    value: _selectedUserType,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: null,
+                        child: Text('جميع الأنواع'),
+                      ),
+                      DropdownMenuItem(
+                        value: UserType.student,
+                        child: Text('طالب'),
+                      ),
+                      DropdownMenuItem(
+                        value: UserType.driver,
+                        child: Text('سائق'),
+                      ),
+                      DropdownMenuItem(
+                        value: UserType.admin,
+                        child: Text('مسؤول'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedUserType = value;
+                      });
+                    },
                   ),
-                  items: const [
-                    DropdownMenuItem(value: null, child: Text('الكل')),
-                    DropdownMenuItem(
-                      value: UserType.student,
-                      child: Text('طالب'),
-                    ),
-                    DropdownMenuItem(
-                      value: UserType.driver,
-                      child: Text('سائق'),
-                    ),
-                    DropdownMenuItem(
-                      value: UserType.admin,
-                      child: Text('مسؤول'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedUserType = value;
-                    });
-                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Data Table
           Expanded(
-            child: Card(
-              child: usersAsync.when(
-                data: (users) {
-                  // Apply filters
-                  var filteredUsers = users.where((user) {
-                    final matchesSearch =
-                        user.fullName.toLowerCase().contains(_searchQuery) ||
-                        user.email.toLowerCase().contains(_searchQuery);
-                    final matchesType =
-                        _selectedUserType == null ||
-                        user.userType == _selectedUserType;
-                    return matchesSearch && matchesType;
-                  }).toList();
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE0E0E0)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: usersAsync.when(
+                  data: (users) {
+                    var filteredUsers = users.where((user) {
+                      final matchesSearch =
+                          user.fullName.toLowerCase().contains(_searchQuery) ||
+                          user.email.toLowerCase().contains(_searchQuery);
+                      final matchesType =
+                          _selectedUserType == null ||
+                          user.userType == _selectedUserType;
+                      return matchesSearch && matchesType;
+                    }).toList();
 
-                  if (filteredUsers.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 64,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'لا يوجد مستخدمين',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                    if (filteredUsers.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off_rounded,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'لا يوجد نتائج',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
 
-                  return DataTable2(
-                    columnSpacing: 12,
-                    horizontalMargin: 12,
-                    minWidth: 900,
-                    columns: const [
-                      DataColumn2(
-                        label: Text(
-                          'الاسم',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        size: ColumnSize.L,
+                    return DataTable2(
+                      columnSpacing: 24,
+                      horizontalMargin: 24,
+                      minWidth: 900,
+                      headingRowColor: MaterialStateProperty.all(
+                        const Color(0xFFF8F9FA),
                       ),
-                      DataColumn2(
-                        label: Text(
-                          'البريد الإلكتروني',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        size: ColumnSize.L,
+                      headingTextStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF495057),
                       ),
-                      DataColumn2(
-                        label: Text(
-                          'النوع',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                      columns: const [
+                        DataColumn2(label: Text('الاسم'), size: ColumnSize.L),
+                        DataColumn2(
+                          label: Text('البريد الإلكتروني'),
+                          size: ColumnSize.L,
                         ),
-                      ),
-                      DataColumn2(
-                        label: Text(
-                          'الحالة',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        DataColumn2(label: Text('النوع')),
+                        DataColumn2(label: Text('الحالة')),
+                        DataColumn2(label: Text('التاريخ')),
+                        DataColumn2(
+                          label: Text('تحكم'), // Changed from "Actions"
+                          size: ColumnSize.S,
                         ),
-                      ),
-                      DataColumn2(
-                        label: Text(
-                          'تاريخ التسجيل',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      DataColumn2(
-                        label: Text(
-                          'إجراءات',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        size: ColumnSize.S,
-                      ),
-                    ],
-                    rows: filteredUsers.map((user) {
-                      return DataRow2(
-                        cells: [
-                          DataCell(
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
-                                  child: Text(
-                                    user.fullName.substring(0, 1).toUpperCase(),
-                                    style: TextStyle(
+                      ],
+                      rows: filteredUsers.map((user) {
+                        return DataRow2(
+                          onTap: () => _showUserDetails(context, user),
+                          cells: [
+                            DataCell(
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.onPrimaryContainer,
+                                      ).colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      user.fullName
+                                          .substring(0, 1)
+                                          .toUpperCase(),
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimaryContainer,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    user.fullName,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          DataCell(Text(user.email)),
-                          DataCell(_buildUserTypeBadge(context, user.userType)),
-                          DataCell(_buildStatusBadge(context, user.isVerified)),
-                          DataCell(
-                            Text(
-                              '${user.createdAt.year}-${user.createdAt.month.toString().padLeft(2, '0')}-${user.createdAt.day.toString().padLeft(2, '0')}',
-                            ),
-                          ),
-                          DataCell(
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.visibility_outlined,
-                                    size: 20,
-                                  ),
-                                  tooltip: 'عرض التفاصيل',
-                                  onPressed: () {
-                                    _showUserDetails(context, user);
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit_outlined,
-                                    size: 20,
-                                  ),
-                                  tooltip: 'تعديل',
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'قريباً - تعديل المستخدم',
-                                        ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      user.fullName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
                                       ),
-                                    );
-                                  },
-                                ),
-                              ],
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'حدث خطأ في تحميل المستخدمين',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        error.toString(),
-                        style: Theme.of(context).textTheme.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: () => ref.invalidate(usersProvider),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('إعادة المحاولة'),
-                      ),
-                    ],
-                  ),
+                            DataCell(Text(user.email)),
+                            DataCell(
+                              _buildUserTypeBadge(context, user.userType),
+                            ),
+                            DataCell(
+                              _buildStatusBadge(context, user.isVerified),
+                            ),
+                            DataCell(
+                              Text(
+                                '${user.createdAt.year}-${user.createdAt.month.toString().padLeft(2, '0')}-${user.createdAt.day.toString().padLeft(2, '0')}',
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                            DataCell(
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.visibility_outlined,
+                                      size: 18,
+                                      color: Colors.grey,
+                                    ),
+                                    tooltip: 'عرض',
+                                    onPressed: () =>
+                                        _showUserDetails(context, user),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.more_vert,
+                                      size: 18,
+                                      color: Colors.grey,
+                                    ),
+                                    tooltip: 'المزيد',
+                                    onPressed: () {
+                                      // TODO: Show context menu
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => Center(child: Text('خطأ: $error')),
                 ),
               ),
             ),
@@ -310,6 +333,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
     );
   }
 
+  // Helper widgets remain largely the same style but can be tweaked if needed
   Widget _buildUserTypeBadge(BuildContext context, UserType type) {
     Color color;
     String label;
@@ -330,11 +354,16 @@ class _UsersPageState extends ConsumerState<UsersPage> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 4,
+      ), // Slimmer
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.08), // Lighter background
+        borderRadius: BorderRadius.circular(
+          6,
+        ), // Less rounded - more square like reference
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
         label,
@@ -348,29 +377,30 @@ class _UsersPageState extends ConsumerState<UsersPage> {
   }
 
   Widget _buildStatusBadge(BuildContext context, bool isVerified) {
+    // Similar slim style
+    final color = isVerified
+        ? const Color(0xFF28A745)
+        : const Color(0xFFDC3545);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isVerified
-            ? const Color(0xFF66BB6A).withOpacity(0.1)
-            : const Color(0xFFEF5350).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isVerified
-              ? const Color(0xFF66BB6A).withOpacity(0.3)
-              : const Color(0xFFEF5350).withOpacity(0.3),
-        ),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
         isVerified ? 'مفعّل' : 'غير مفعّل',
         style: TextStyle(
-          color: isVerified ? const Color(0xFF66BB6A) : const Color(0xFFEF5350),
+          color: color,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
+
+  // _showUserDetails & _buildDetailRow methods can remain as they are or be updated if needed.
+  // For now I'm leaving them but ensuring the build method closes correctly.
 
   void _showUserDetails(BuildContext context, UserEntity user) {
     showDialog(
