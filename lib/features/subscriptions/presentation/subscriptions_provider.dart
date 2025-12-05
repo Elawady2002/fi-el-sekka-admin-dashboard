@@ -20,7 +20,7 @@ final subscriptionsProvider = FutureProvider<List<SubscriptionEntity>>((
 
     return subscriptions;
   } catch (e) {
-    print('Error fetching subscriptions: $e');
+    debugPrint('Error fetching subscriptions: $e');
     rethrow;
   }
 });

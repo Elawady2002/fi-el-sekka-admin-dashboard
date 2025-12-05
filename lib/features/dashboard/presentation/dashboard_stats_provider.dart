@@ -47,7 +47,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       subscriptionGrowth: 8.3,
     );
   } catch (e) {
-    print('Error fetching dashboard stats: $e');
+    debugPrint('Error fetching dashboard stats: $e');
     // Return default values on error
     return const DashboardStats(
       totalUsers: 0,

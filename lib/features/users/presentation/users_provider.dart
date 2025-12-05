@@ -18,7 +18,7 @@ final usersProvider = FutureProvider<List<UserEntity>>((ref) async {
 
     return users;
   } catch (e) {
-    print('Error fetching users: $e');
+    debugPrint('Error fetching users: $e');
     rethrow;
   }
 });

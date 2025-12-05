@@ -1,7 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/core/config/supabase_config.dart';
 import 'package:dashboard_fi_el_sekka/features/auth/domain/user_entity.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Auth state
 class AuthState {
@@ -37,7 +37,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _loadUser(String userId) async {
     try {
-      print('📥 Loading user data for ID: $userId');
+      debugPrint('📥 Loading user data for ID: $userId');
 
       final response = await _supabase
           .from('users')
@@ -45,15 +45,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
           .eq('id', userId)
           .single();
 
-      print('📦 User data received: $response');
+      debugPrint('📦 User data received: $response');
 
       final user = UserEntity.fromJson(response);
 
-      print('👤 User entity created: ${user.email}, type: ${user.userType}');
+      debugPrint(
+        '👤 User entity created: ${user.email}, type: ${user.userType}',
+      );
 
       // Only allow admin users
       if (!user.isAdmin) {
-        print('⛔ Access denied: User is not an admin');
+        debugPrint('⛔ Access denied: User is not an admin');
         await signOut();
         state = state.copyWith(
           error: 'Access denied. Admin privileges required.',
@@ -61,10 +63,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return;
       }
 
-      print('✅ Admin user verified, updating state');
+      debugPrint('✅ Admin user verified, updating state');
       state = state.copyWith(user: user);
     } catch (e) {
-      print('❌ Error loading user: $e');
+      debugPrint('❌ Error loading user: $e');
       state = state.copyWith(error: e.toString());
     }
   }
@@ -73,23 +75,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      print('🔐 Attempting login for: $email');
+      debugPrint('🔐 Attempting login for: $email');
 
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
-      print('✅ Auth successful, user ID: ${response.user?.id}');
+      debugPrint('✅ Auth successful, user ID: ${response.user?.id}');
 
       if (response.user != null) {
         await _loadUser(response.user!.id);
-        print(
+        debugPrint(
           '👤 User loaded: ${state.user?.email}, isAdmin: ${state.user?.isAdmin}',
         );
       }
     } catch (e) {
-      print('❌ Login error: $e');
+      debugPrint('❌ Login error: $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Login failed: ${e.toString()}',

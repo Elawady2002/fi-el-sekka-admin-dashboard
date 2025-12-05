@@ -24,7 +24,7 @@ final tripsProvider = FutureProvider<List<TripEntity>>((ref) async {
       return TripEntity.fromJson(trip);
     }).toList();
   } catch (e) {
-    print('Error fetching trips: $e');
+    debugPrint('Error fetching trips: $e');
     rethrow;
   }
 });

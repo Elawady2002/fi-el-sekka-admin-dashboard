@@ -84,7 +84,6 @@ class _ModernSidebar extends StatelessWidget {
                   height: 45,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    print('Logo error: $error');
                     return const Icon(
                       Icons.directions_bus,
                       size: 40,

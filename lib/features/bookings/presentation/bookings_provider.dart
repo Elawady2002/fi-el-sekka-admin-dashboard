@@ -23,7 +23,7 @@ final bookingsProvider = FutureProvider<List<BookingEntity>>((ref) async {
       return BookingEntity.fromJson(booking);
     }).toList();
   } catch (e) {
-    print('Error fetching bookings: $e');
+    debugPrint('Error fetching bookings: $e');
     rethrow;
   }
 });
