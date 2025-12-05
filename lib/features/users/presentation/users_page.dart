@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/features/users/presentation/users_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/auth/domain/user_entity.dart';
 import 'package:data_table_2/data_table_2.dart';
-import 'package:intl/intl.dart';
 
 class UsersPage extends ConsumerStatefulWidget {
   const UsersPage({super.key});
@@ -232,7 +231,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                           DataCell(_buildStatusBadge(context, user.isVerified)),
                           DataCell(
                             Text(
-                              DateFormat('yyyy-MM-dd').format(user.createdAt),
+                              '${user.createdAt.year}-${user.createdAt.month.toString().padLeft(2, '0')}-${user.createdAt.day.toString().padLeft(2, '0')}',
                             ),
                           ),
                           DataCell(
@@ -394,7 +393,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
               ),
               _buildDetailRow(
                 'تاريخ التسجيل',
-                DateFormat('yyyy-MM-dd HH:mm').format(user.createdAt),
+                '${user.createdAt.year}-${user.createdAt.month.toString().padLeft(2, '0')}-${user.createdAt.day.toString().padLeft(2, '0')} ${user.createdAt.hour.toString().padLeft(2, '0')}:${user.createdAt.minute.toString().padLeft(2, '0')}',
               ),
               if (user.studentId != null)
                 _buildDetailRow('الرقم الجامعي', user.studentId!),
