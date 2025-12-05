@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/core/config/supabase_config.dart';
 
@@ -36,10 +37,13 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     final activeSubscriptions = (subsResponse as List).length;
 
     // For now, return mock data for trips and revenue
+    // TODO: Implement real queries when tables are ready
 
     return DashboardStats(
       totalUsers: totalUsers,
       activeSubscriptions: activeSubscriptions,
+      todaysTrips: 0, // TODO: Query trips table
+      monthlyRevenue: 0.0, // TODO: Calculate from subscriptions
       userGrowth: 12.5,
       subscriptionGrowth: 8.3,
     );

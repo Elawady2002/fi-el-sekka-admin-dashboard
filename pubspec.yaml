@@ -105,7 +105,6 @@ flutter:
   assets:
     - .env
     - assets/logo.png
-    - assets/logo_new.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

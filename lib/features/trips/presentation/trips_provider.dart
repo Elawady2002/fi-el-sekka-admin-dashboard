@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/core/config/supabase_config.dart';
 import 'package:dashboard_fi_el_sekka/features/trips/domain/trip_entity.dart';

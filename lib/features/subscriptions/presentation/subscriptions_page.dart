@@ -89,7 +89,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           statsAsync.when(
             data: (stats) => _buildStatsCards(context, stats),
             loading: () => const SizedBox(height: 120),
-            error: (_, _) => const SizedBox(height: 120),
+            error: (_, __) => const SizedBox(height: 120),
           ),
 
           const SizedBox(height: 24),
@@ -131,7 +131,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<SubscriptionType?>(
-                    initialValue: _selectedType,
+                    value: _selectedType,
                     decoration: InputDecoration(
                       labelText: 'نوع الاشتراك',
                       filled: true,
@@ -146,17 +146,17 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(initialValue: null, child: Text('الكل')),
+                      DropdownMenuItem(value: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        initialValue: SubscriptionType.monthly,
+                        value: SubscriptionType.monthly,
                         child: Text('شهري'),
                       ),
                       DropdownMenuItem(
-                        initialValue: SubscriptionType.semester,
+                        value: SubscriptionType.semester,
                         child: Text('ترم دراسي'),
                       ),
                       DropdownMenuItem(
-                        initialValue: SubscriptionType.yearly,
+                        value: SubscriptionType.yearly,
                         child: Text('سنوي'),
                       ),
                     ],
@@ -170,7 +170,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<SubscriptionStatus?>(
-                    initialValue: _selectedStatus,
+                    value: _selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'الحالة',
                       filled: true,
@@ -185,17 +185,17 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(initialValue: null, child: Text('الكل')),
+                      DropdownMenuItem(value: null, child: Text('الكل')),
                       DropdownMenuItem(
-                        initialValue: SubscriptionStatus.active,
+                        value: SubscriptionStatus.active,
                         child: Text('نشط'),
                       ),
                       DropdownMenuItem(
-                        initialValue: SubscriptionStatus.expired,
+                        value: SubscriptionStatus.expired,
                         child: Text('منتهي'),
                       ),
                       DropdownMenuItem(
-                        initialValue: SubscriptionStatus.pending,
+                        value: SubscriptionStatus.pending,
                         child: Text('قيد الانتظار'),
                       ),
                     ],
@@ -260,7 +260,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                       columnSpacing: 24,
                       horizontalMargin: 24,
                       minWidth: 1000,
-                      headingRowColor: WidgetStateProperty.all(
+                      headingRowColor: MaterialStateProperty.all(
                         const Color(0xFFF8F9FA),
                       ),
                       headingTextStyle: const TextStyle(
@@ -445,7 +445,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           Expanded(
             child: _StatCard(
               title: 'إجمالي الاشتراكات',
-              initialValue: stats.total.toString(),
+              value: stats.total.toString(),
               icon: Icons.card_membership,
               color: const Color(0xFF2196F3),
             ),
@@ -454,7 +454,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           Expanded(
             child: _StatCard(
               title: 'الاشتراكات النشطة',
-              initialValue: stats.active.toString(),
+              value: stats.active.toString(),
               icon: Icons.check_circle,
               color: const Color(0xFF4CAF50),
             ),
@@ -463,7 +463,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           Expanded(
             child: _StatCard(
               title: 'الاشتراكات المنتهية',
-              initialValue: stats.expired.toString(),
+              value: stats.expired.toString(),
               icon: Icons.cancel,
               color: const Color(0xFFEF5350),
             ),
@@ -472,7 +472,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           Expanded(
             child: _StatCard(
               title: 'الإيرادات الشهرية',
-              initialValue: '${stats.monthlyRevenue.toStringAsFixed(0)} ج.م',
+              value: '${stats.monthlyRevenue.toStringAsFixed(0)} ج.م',
               icon: Icons.attach_money,
               color: const Color(0xFF9C27B0),
             ),
@@ -499,9 +499,9 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         type.displayName,
@@ -531,9 +531,9 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         status.displayName,
@@ -625,7 +625,7 @@ class _StatCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withValues(alpha: 0.2)),
+        side: BorderSide(color: color.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -634,7 +634,7 @@ class _StatCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 24),
