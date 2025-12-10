@@ -10,23 +10,15 @@ final tripsProvider = FutureProvider<List<TripEntity>>((ref) async {
   try {
     final response = await supabase
         .from('schedules')
-        .select('''
-          *,
-          users!schedules_driver_id_fkey(full_name)
-        ''')
-        .order('trip_date', ascending: false);
+        .select()
+        .order('created_at', ascending: false);
 
     return (response as List).map((json) {
-      // Merge driver data into trip
-      final trip = Map<String, dynamic>.from(json);
-      if (json['users'] != null) {
-        trip['driver_name'] = json['users']['full_name'];
-      }
-      return TripEntity.fromJson(trip);
+      return TripEntity.fromJson(json);
     }).toList();
   } catch (e) {
     debugPrint('Error fetching trips: $e');
-    rethrow;
+    return []; // Return empty list on error instead of rethrowing
   }
 });
 

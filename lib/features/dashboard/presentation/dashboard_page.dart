@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/features/auth/presentation/auth_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/dashboard/presentation/dashboard_stats_provider.dart';
-import 'package:dashboard_fi_el_sekka/features/dashboard/presentation/activity_provider.dart';
-import 'package:dashboard_fi_el_sekka/features/dashboard/domain/activity_event.dart';
+import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_provider.dart';
+import 'package:dashboard_fi_el_sekka/features/subscriptions/domain/subscription_entity.dart';
+import 'package:dashboard_fi_el_sekka/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -13,6 +14,7 @@ class DashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final statsAsync = ref.watch(dashboardStatsProvider);
+    final subscriptionsAsync = ref.watch(subscriptionsProvider);
     final userName = authState.user?.fullName ?? 'Admin';
 
     return SingleChildScrollView(
@@ -20,137 +22,99 @@ class DashboardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'مرحباً, $userName 👋',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'إليك نظرة عامة على نظام Fi El Sekka',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+          // Welcome Header
+          _WelcomeHeader(userName: userName),
+          const SizedBox(height: 24),
+
+          // Stats Cards
+          statsAsync.when(
+            data: (stats) => _StatsRow(stats: stats),
+            loading: () => const _StatsRowLoading(),
+            error: (_, _) => const SizedBox(height: 100),
+          ),
+          const SizedBox(height: 24),
+
+          // Active Subscribers Section
+          Text(
+            'المشتركين النشطين',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+
+          subscriptionsAsync.when(
+            data: (subscriptions) {
+              final activeSubscriptions = subscriptions
+                  .where((s) => s.isActive)
+                  .toList();
+
+              if (activeSubscriptions.isEmpty) {
+                return _EmptyState(
+                  icon: Icons.person_off_outlined,
+                  message: 'لا يوجد مشتركين نشطين حالياً',
+                );
+              }
+
+              return _SubscribersTable(subscriptions: activeSubscriptions);
+            },
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+            ),
+            error: (error, _) => _EmptyState(
+              icon: Icons.error_outline,
+              message: 'حدث خطأ في تحميل البيانات',
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Quick Actions
+          Row(
+            children: [
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.person_add_rounded,
+                  title: 'إدارة المستخدمين',
+                  subtitle: 'عرض وإدارة جميع المستخدمين',
+                  color: AppTheme.accentBlue,
+                  onTap: () => context.go('/users'),
                 ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.card_membership_rounded,
+                  title: 'إدارة الاشتراكات',
+                  subtitle: 'عرض جميع الاشتراكات والخطط',
+                  color: AppTheme.primaryPurple,
+                  onTap: () => context.go('/subscriptions'),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.directions_bus_rounded,
+                  title: 'إدارة الرحلات',
+                  subtitle: 'جدولة الرحلات والمسارات',
+                  color: AppTheme.accentOrange,
+                  onTap: () => context.go('/trips'),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.book_online_rounded,
+                  title: 'إدارة الحجوزات',
+                  subtitle: 'عرض ومتابعة الحجوزات',
+                  color: AppTheme.accentGreen,
+                  onTap: () => context.go('/bookings'),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 32),
-
-          // Folder Cards - Horizontal Row
-          statsAsync.when(
-            data: (stats) {
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _FolderCard(
-                      title: 'المستخدمين',
-                      count: '${stats.totalUsers} مستخدم',
-                      color: const Color(0xFF2196F3), // Blue
-                      onTap: () => context.go('/users'),
-                    ),
-                    const SizedBox(width: 16),
-                    _FolderCard(
-                      title: 'الحجوزات',
-                      count: '${stats.todaysTrips} حجز',
-                      color: const Color(0xFFFF9800), // Orange
-                      onTap: () => context.go('/bookings'),
-                    ),
-                    const SizedBox(width: 16),
-                    _FolderCard(
-                      title: 'الاشتراكات',
-                      count: '${stats.activeSubscriptions} اشتراك',
-                      color: const Color(0xFF4CAF50), // Green
-                      onTap: () => context.go('/subscriptions'),
-                    ),
-                    const SizedBox(width: 16),
-                    _FolderCard(
-                      title: 'الرحلات',
-                      count: '${stats.todaysTrips} رحلة',
-                      color: const Color(0xFF9C27B0), // Purple
-                      onTap: () => context.go('/trips'),
-                    ),
-                  ],
-                ),
-              );
-            },
-            loading: () => const SizedBox(height: 150),
-            error: (_, _) => const SizedBox(height: 150),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Recent Activity Feed
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'آخر الأحداث',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text('عرض الكل'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _RecentActivityFeed(),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -158,459 +122,615 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
-class _FolderCard extends StatefulWidget {
-  final String title;
-  final String count;
-  final Color color;
-  final VoidCallback onTap;
+// Welcome Header
+class _WelcomeHeader extends StatelessWidget {
+  final String userName;
 
-  const _FolderCard({
-    required this.title,
-    required this.count,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  State<_FolderCard> createState() => _FolderCardState();
-}
-
-class _FolderCardState extends State<_FolderCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _tiltAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _tiltAnimation = Tween<double>(
-      begin: 0.0,
-      end: -0.05,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuad));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _WelcomeHeader({required this.userName});
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => _controller.forward(),
-      onExit: (_) => _controller.reverse(),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              alignment: Alignment.center,
-              child: Transform(
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001) // Perspective
-                  ..rotateX(_tiltAnimation.value), // Slight tilt effect
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: 260,
-                  height: 220,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // The Professional Custom Painted Folder
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _ProfessionalFolderPainter(
-                            color: widget.color,
-                            animationValue: _controller.value,
-                          ),
-                        ),
-                      ),
+    final now = DateTime.now();
+    final greeting = _getGreeting(now.hour);
 
-                      // Content Overlay
-                      Positioned(
-                        top: 55, // Adjusted for the new painter layout
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 20,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Header Row
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.title,
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                            height: 1.2,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'إدارة ${widget.title}',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.white.withValues(alpha: 
-                                              0.9,
-                                            ),
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Animated Action Icons
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.more_vert_rounded,
-                                        color: Colors.white.withValues(alpha: 0.9),
-                                        size: 24,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-
-                              const Spacer(),
-
-                              // Bottom Count with subtle pulse on hover
-                              Transform.translate(
-                                offset: Offset(0, -5 * _controller.value),
-                                child: Text(
-                                  widget.count,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$greeting, $userName 👋',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'نظرة عامة على نظام في السكة',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+            ),
+          ],
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceWhite,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.borderLight),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 16,
+                color: AppTheme.textSecondary,
               ),
-            );
-          },
+              const SizedBox(width: 8),
+              Text(
+                '${now.day}/${now.month}/${now.year}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getGreeting(int hour) {
+    if (hour < 12) return 'صباح الخير';
+    if (hour < 17) return 'مساء الخير';
+    return 'مساء الخير';
+  }
+}
+
+// Stats Row
+class _StatsRow extends StatelessWidget {
+  final DashboardStats stats;
+
+  const _StatsRow({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // First Row - 3 cards
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                title: 'المستخدمين',
+                value: '${stats.totalUsers}',
+                icon: Icons.people_rounded,
+                color: AppTheme.accentBlue,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StatCard(
+                title: 'الاشتراكات النشطة',
+                value: '${stats.activeSubscriptions}',
+                icon: Icons.card_membership_rounded,
+                color: AppTheme.primaryPurple,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StatCard(
+                title: 'إجمالي الحجوزات',
+                value: '${stats.totalBookings}',
+                icon: Icons.book_online_rounded,
+                color: AppTheme.chartBlue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Second Row - 2 cards
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                title: 'رحلات اليوم',
+                value: '${stats.todaysTrips}',
+                icon: Icons.directions_bus_rounded,
+                color: AppTheme.accentOrange,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StatCard(
+                title: 'الإيرادات الشهرية',
+                value: '${stats.monthlyRevenue.toStringAsFixed(0)} ج.م',
+                icon: Icons.payments_rounded,
+                color: AppTheme.accentGreen,
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Empty space to balance the row
+            const Expanded(child: SizedBox()),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StatsRowLoading extends StatelessWidget {
+  const _StatsRowLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(
+        4,
+        (index) => Expanded(
+          child: Container(
+            height: 100,
+            margin: EdgeInsets.only(right: index < 3 ? 16 : 0),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceWhite,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.borderLight),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _ProfessionalFolderPainter extends CustomPainter {
+// Simple Stat Card
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
   final Color color;
-  final double animationValue;
 
-  _ProfessionalFolderPainter({
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
     required this.color,
-    required this.animationValue,
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    // We will draw within slightly smaller bounds to avoid shadow clipping
-    // Vertical padding to prevent bottom clipping of shadow
-    final double vPad = 12.0;
-    final double drawWidth = size.width;
-
-    // 1. Back Tab (Darker Shade)
-    final HSVColor hsv = HSVColor.fromColor(color);
-    final Color backTabColor = hsv
-        .withValue((hsv.value - 0.2).clamp(0.0, 1.0))
-        .toColor();
-
-    final backPaint = Paint()
-      ..color = backTabColor
-      ..style = PaintingStyle.fill;
-
-    // Back Tab moves slightly up on hover
-    final double backTabTopY = vPad - (animationValue * 4.0);
-    // Ensure back tab doesn't go below 0 visually
-    final double adjustedBackTabTopY = backTabTopY < 0 ? 0 : backTabTopY;
-
-    // Back Tab shape: slightly taller than front, rounded top-left and top-right
-    // AND NOW: rounded bottom corners to match front panel so they don't poke out.
-    final backTabPath = Path()
-      ..moveTo(0, adjustedBackTabTopY + 20)
-      ..quadraticBezierTo(0, adjustedBackTabTopY, 20, adjustedBackTabTopY)
-      ..lineTo(drawWidth * 0.4, adjustedBackTabTopY)
-      ..quadraticBezierTo(
-        drawWidth * 0.45,
-        adjustedBackTabTopY,
-        drawWidth * 0.48,
-        adjustedBackTabTopY + 12,
-      )
-      ..lineTo(drawWidth - 20, adjustedBackTabTopY + 12)
-      ..quadraticBezierTo(
-        drawWidth,
-        adjustedBackTabTopY + 12,
-        drawWidth,
-        adjustedBackTabTopY + 32,
-      )
-      // Bottom Right Corner (Matched to Front Panel RRect)
-      ..lineTo(drawWidth, size.height - vPad - 24)
-      ..arcToPoint(
-        Offset(drawWidth - 24, size.height - vPad),
-        radius: const Radius.circular(24),
-        clockwise: true,
-      )
-      // Bottom Left Corner (Matched to Front Panel RRect)
-      ..lineTo(24, size.height - vPad)
-      ..arcToPoint(
-        Offset(0, size.height - vPad - 24),
-        radius: const Radius.circular(24),
-        clockwise: true,
-      )
-      ..close();
-
-    canvas.drawPath(backTabPath, backPaint);
-
-    // 2. Front Panel (Main Content)
-    final double frontPanelTopY = adjustedBackTabTopY + 36;
-    final double frontPanelBottomY = size.height - vPad;
-
-    final frontRect = RRect.fromRectAndCorners(
-      Rect.fromLTRB(0, frontPanelTopY, drawWidth, frontPanelBottomY),
-      topLeft: const Radius.circular(20),
-      topRight: const Radius.circular(20),
-      bottomLeft: const Radius.circular(24),
-      bottomRight: const Radius.circular(24),
-    );
-
-    // Dynamic Shadow
-    final double elevation = 4.0 + (animationValue * 8.0);
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15 + (animationValue * 0.1))
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, elevation * 1.5);
-
-    // Draw shadow first
-    canvas.drawRRect(frontRect.shift(Offset(0, elevation * 0.5)), shadowPaint);
-
-    // Gradient for Front Panel
-    final Color frontTopColor = hsv
-        .withSaturation((hsv.saturation - 0.05).clamp(0.0, 1.0))
-        .withValue((hsv.value + 0.1).clamp(0.0, 1.0))
-        .toColor();
-    final Color frontBottomColor = color;
-
-    final frontPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [frontTopColor, frontBottomColor],
-        stops: const [0.0, 0.9],
-      ).createShader(frontRect.outerRect);
-
-    canvas.drawRRect(frontRect, frontPaint);
-
-    // 3. Highlight/Reflection (Clipped to match Front Panel exactly)
-    canvas.save();
-    canvas.clipRRect(frontRect); // <--- Matches corner radius exactly
-
-    final highlightPath = Path()
-      ..moveTo(0, frontPanelTopY)
-      // Large diagonal cut for the reflection
-      ..lineTo(drawWidth * 0.7, frontPanelTopY)
-      ..lineTo(0, frontPanelTopY + 90)
-      ..close();
-
-    final highlightPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: 0.20), // Slightly stronger to be visible
-          Colors.white.withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromLTWH(0, frontPanelTopY, drawWidth, 100));
-
-    canvas.drawPath(highlightPath, highlightPaint);
-
-    // Top Edge Highlight (Inner stroke for 3D effect)
-    final edgePaint = Paint()
-      ..color = Colors.white
-          .withValues(alpha: 0.4) // Slightly more visible
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    // Trace the top curve of the front panel
-    final edgePath = Path()
-      ..moveTo(0, frontPanelTopY + 24)
-      ..quadraticBezierTo(0, frontPanelTopY, 24, frontPanelTopY)
-      ..lineTo(drawWidth - 24, frontPanelTopY)
-      ..quadraticBezierTo(
-        drawWidth,
-        frontPanelTopY,
-        drawWidth,
-        frontPanelTopY + 24,
-      );
-
-    canvas.drawPath(edgePath, edgePaint);
-
-    canvas.restore(); // Restore clip
-
-    // We already drew the bevel in the clip above? No, we need to be careful with restore.
-    // The previous code had a restore call.
-  }
-
-  @override
-  bool shouldRepaint(_ProfessionalFolderPainter oldDelegate) {
-    return oldDelegate.color != color ||
-        oldDelegate.animationValue != animationValue;
-  }
-}
-
-// Recent Activity Feed Widget
-class _RecentActivityFeed extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activityAsync = ref.watch(recentActivityProvider);
-
-    return activityAsync.when(
-      data: (events) {
-        if (events.isEmpty) {
-          return const SizedBox(
-            height: 200,
-            child: Center(child: Text('لا توجد أحداث حديثة')),
-          );
-        }
-
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: events.length > 10 ? 10 : events.length,
-          separatorBuilder: (context, index) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            return _ActivityItem(event: events[index]);
-          },
-        );
-      },
-      loading: () => const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => SizedBox(
-        height: 200,
-        child: Center(child: Text('حدث خطأ في تحميل الأحداث')),
-      ),
-    );
-  }
-}
-
-// Activity Item Widget
-class _ActivityItem extends StatelessWidget {
-  final ActivityEvent event;
-
-  const _ActivityItem({required this.event});
-
-  String _getTimeAgo(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inMinutes < 1) {
-      return 'الآن';
-    } else if (difference.inMinutes < 60) {
-      return 'منذ ${difference.inMinutes} دقيقة';
-    } else if (difference.inHours < 24) {
-      return 'منذ ${difference.inHours} ساعة';
-    } else if (difference.inDays < 7) {
-      return 'منذ ${difference.inDays} يوم';
-    } else {
-      return 'منذ ${(difference.inDays / 7).floor()} أسبوع';
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
       child: Row(
         children: [
-          // Icon
           Container(
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: event.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(event.icon, color: event.color, size: 20),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(width: 12),
-
-          // Content
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  event.typeLabel,
+                  title,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 12,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  event.title,
+                  value,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  event.subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Subscribers Table
+class _SubscribersTable extends StatelessWidget {
+  final List<SubscriptionEntity> subscriptions;
+
+  const _SubscribersTable({required this.subscriptions});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppTheme.backgroundLight,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                _TableHeaderCell(label: 'المستخدم', flex: 3),
+                _TableHeaderCell(label: 'البريد الإلكتروني', flex: 3),
+                _TableHeaderCell(label: 'نوع الخطة', flex: 2),
+                _TableHeaderCell(label: 'تاريخ الانتهاء', flex: 2),
+                _TableHeaderCell(label: 'المبلغ', flex: 2),
+                _TableHeaderCell(label: 'الحالة', flex: 2),
+              ],
+            ),
+          ),
+          // Rows
+          ...subscriptions
+              .take(10)
+              .map((sub) => _SubscriberRow(subscription: sub)),
+
+          // Show More Button
+          if (subscriptions.length > 10)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              child: TextButton(
+                onPressed: () => context.go('/subscriptions'),
+                child: Text('عرض الكل (${subscriptions.length} مشترك)'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TableHeaderCell extends StatelessWidget {
+  final String label;
+  final int flex;
+
+  const _TableHeaderCell({required this.label, required this.flex});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: flex,
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _SubscriberRow extends StatelessWidget {
+  final SubscriptionEntity subscription;
+
+  const _SubscriberRow({required this.subscription});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppTheme.borderLight)),
+      ),
+      child: Row(
+        children: [
+          // User Name
+          Expanded(
+            flex: 3,
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryPurple.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Center(
+                    child: Text(
+                      subscription.userName.isNotEmpty
+                          ? subscription.userName[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        color: AppTheme.primaryPurple,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    subscription.userName,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
           ),
 
-          // Time
-          Text(
-            _getTimeAgo(event.timestamp),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
+          // Email
+          Expanded(
+            flex: 3,
+            child: Text(
+              subscription.userEmail,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+              overflow: TextOverflow.ellipsis,
             ),
+          ),
+
+          // Plan Type
+          Expanded(flex: 2, child: _PlanBadge(type: subscription.type)),
+
+          // End Date
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _formatDate(subscription.endDate),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (subscription.daysRemaining > 0)
+                  Text(
+                    '${subscription.daysRemaining} يوم متبقي',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: subscription.daysRemaining < 7
+                          ? AppTheme.accentRed
+                          : AppTheme.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Amount
+          Expanded(
+            flex: 2,
+            child: Text(
+              '${subscription.amount.toStringAsFixed(0)} ج.م',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+
+          // Status
+          Expanded(flex: 2, child: _StatusBadge(status: subscription.status)),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+// Plan Badge
+class _PlanBadge extends StatelessWidget {
+  final SubscriptionType type;
+
+  const _PlanBadge({required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    switch (type) {
+      case SubscriptionType.monthly:
+        color = AppTheme.accentBlue;
+      case SubscriptionType.semester:
+        color = AppTheme.primaryPurple;
+      case SubscriptionType.yearly:
+        color = AppTheme.accentGreen;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        type.displayName,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+// Status Badge
+class _StatusBadge extends StatelessWidget {
+  final SubscriptionStatus status;
+
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    switch (status) {
+      case SubscriptionStatus.active:
+        color = AppTheme.accentGreen;
+      case SubscriptionStatus.expired:
+        color = AppTheme.accentRed;
+      case SubscriptionStatus.pending:
+        color = AppTheme.accentOrange;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          status.displayName,
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Quick Action Card
+class _QuickActionCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_QuickActionCard> createState() => _QuickActionCardState();
+}
+
+class _QuickActionCardState extends State<_QuickActionCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? widget.color.withValues(alpha: 0.05)
+                : AppTheme.surfaceWhite,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isHovered
+                  ? widget.color.withValues(alpha: 0.3)
+                  : AppTheme.borderLight,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: widget.color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(widget.icon, color: widget.color, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: _isHovered ? widget.color : AppTheme.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Empty State
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const _EmptyState({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 48, color: AppTheme.textSecondary),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
           ),
         ],
       ),

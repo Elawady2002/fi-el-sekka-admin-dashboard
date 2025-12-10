@@ -1,27 +1,54 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dashboard_fi_el_sekka/core/config/supabase_config.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/domain/subscription_entity.dart';
 
-/// Subscriptions provider - fetches all subscriptions with user data
+/// Subscriptions provider - fetches all subscriptions using service key to bypass RLS
 final subscriptionsProvider = FutureProvider<List<SubscriptionEntity>>((
   ref,
 ) async {
-  final supabase = SupabaseConfig.client;
-
   try {
-    final response = await supabase
-        .from('subscriptions')
-        .select('*, users(full_name, email)')
-        .order('created_at', ascending: false);
+    debugPrint('📦 Fetching subscriptions from database...');
 
-    final subscriptions = (response as List)
-        .map((json) => SubscriptionEntity.fromJson(json))
+    final supabaseUrl = dotenv.env['SUPABASE_URL'];
+    final serviceKey =
+        dotenv.env['SUPABASE_SERVICE_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'];
+
+    if (supabaseUrl == null || serviceKey == null) {
+      throw Exception('Missing Supabase credentials');
+    }
+
+    // Use direct REST API call with service key to bypass RLS
+    final response = await http.get(
+      Uri.parse(
+        '$supabaseUrl/rest/v1/subscriptions?select=*,users(full_name,email,phone)&order=created_at.desc',
+      ),
+      headers: {
+        'apikey': serviceKey,
+        'Authorization': 'Bearer $serviceKey',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch subscriptions: ${response.body}');
+    }
+
+    final responseList = json.decode(response.body) as List? ?? [];
+    debugPrint('📦 Fetched ${responseList.length} subscriptions');
+
+    final subscriptions = responseList
+        .map(
+          (json) => SubscriptionEntity.fromJson(json as Map<String, dynamic>),
+        )
         .toList();
 
     return subscriptions;
-  } catch (e) {
-    debugPrint('Error fetching subscriptions: $e');
+  } catch (e, stack) {
+    debugPrint('❌ Error fetching subscriptions: $e');
+    debugPrint('❌ Stack trace: $stack');
     rethrow;
   }
 });
@@ -33,6 +60,7 @@ class SubscriptionStats {
   final int expired;
   final int pending;
   final double monthlyRevenue;
+  final double totalRevenue;
 
   const SubscriptionStats({
     required this.total,
@@ -40,31 +68,46 @@ class SubscriptionStats {
     required this.expired,
     required this.pending,
     required this.monthlyRevenue,
+    required this.totalRevenue,
   });
 }
 
 final subscriptionStatsProvider = FutureProvider<SubscriptionStats>((
   ref,
 ) async {
-  final subscriptionsAsync = await ref.watch(subscriptionsProvider.future);
+  final subscriptions = await ref.watch(subscriptionsProvider.future);
 
-  final total = subscriptionsAsync.length;
-  final active = subscriptionsAsync.where((s) => s.isActive).length;
-  final expired = subscriptionsAsync.where((s) => s.isExpired).length;
-  final pending = subscriptionsAsync
+  final active = subscriptions
+      .where((s) => s.status == SubscriptionStatus.active)
+      .length;
+  final expired = subscriptions
+      .where((s) => s.status == SubscriptionStatus.expired)
+      .length;
+  final pending = subscriptions
       .where((s) => s.status == SubscriptionStatus.pending)
       .length;
 
-  // Calculate monthly revenue from active subscriptions
-  final monthlyRevenue = subscriptionsAsync
-      .where((s) => s.isActive && s.type == SubscriptionType.monthly)
-      .fold(0.0, (sum, s) => sum + s.amount);
+  final totalRevenue = subscriptions
+      .where((s) => s.status == SubscriptionStatus.active)
+      .fold(0.0, (sum, s) => sum + s.totalPrice);
+
+  // Calculate monthly revenue (subscriptions created this month)
+  final now = DateTime.now();
+  final monthStart = DateTime(now.year, now.month, 1);
+  final monthlyRevenue = subscriptions
+      .where(
+        (s) =>
+            s.status == SubscriptionStatus.active &&
+            s.createdAt.isAfter(monthStart),
+      )
+      .fold(0.0, (sum, s) => sum + s.totalPrice);
 
   return SubscriptionStats(
-    total: total,
+    total: subscriptions.length,
     active: active,
     expired: expired,
     pending: pending,
     monthlyRevenue: monthlyRevenue,
+    totalRevenue: totalRevenue,
   );
 });

@@ -8,6 +8,8 @@ import 'package:dashboard_fi_el_sekka/features/users/presentation/users_page.dar
 import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_page.dart';
 import 'package:dashboard_fi_el_sekka/features/bookings/presentation/bookings_page.dart';
 import 'package:dashboard_fi_el_sekka/features/trips/presentation/trips_page.dart';
+import 'package:dashboard_fi_el_sekka/features/routes/presentation/routes_locations_page.dart';
+import 'package:dashboard_fi_el_sekka/features/payments/presentation/payments_page.dart';
 import 'package:dashboard_fi_el_sekka/core/widgets/dashboard_layout.dart';
 
 // Notifier to trigger router refresh
@@ -79,10 +81,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const BookingsPage(),
           ),
           GoRoute(
-            path: '/finance',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Finance - Coming Soon')),
-            ),
+            path: '/routes-locations',
+            builder: (context, state) => const RoutesLocationsPage(),
+          ),
+          GoRoute(
+            path: '/payments',
+            builder: (context, state) => const PaymentsPage(),
           ),
         ],
       ),

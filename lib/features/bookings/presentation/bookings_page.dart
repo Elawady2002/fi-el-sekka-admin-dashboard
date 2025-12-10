@@ -95,7 +95,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
           statsAsync.when(
             data: (stats) => _buildStatsCards(context, stats),
             loading: () => const SizedBox(height: 120),
-            error: (_, __) => const SizedBox(height: 120),
+            error: (_, _) => const SizedBox(height: 120),
           ),
 
           const SizedBox(height: 24),
@@ -137,7 +137,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<TripType?>(
-                    value: _selectedTripType,
+                    initialValue: _selectedTripType,
                     decoration: InputDecoration(
                       labelText: 'نوع الرحلة',
                       filled: true,
@@ -176,7 +176,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<BookingStatus?>(
-                    value: _selectedStatus,
+                    initialValue: _selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'الحالة',
                       filled: true,
@@ -275,7 +275,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                       columnSpacing: 24,
                       horizontalMargin: 24,
                       minWidth: 1000,
-                      headingRowColor: MaterialStateProperty.all(
+                      headingRowColor: WidgetStateProperty.all(
                         const Color(0xFFF8F9FA),
                       ),
                       headingTextStyle: const TextStyle(
@@ -360,9 +360,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
                                       color: Colors.grey,
                                     ),
                                     tooltip: 'المزيد',
-                                    onPressed: () {
-                                      // TODO: Show context menu
-                                    },
+                                    onPressed: () {},
                                   ),
                                 ],
                               ),
@@ -474,9 +472,9 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         type.displayName,
@@ -492,6 +490,9 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
   Widget _buildStatusBadge(BuildContext context, BookingStatus status) {
     Color color;
     switch (status) {
+      case BookingStatus.pending:
+        color = const Color(0xFFFF9800);
+        break;
       case BookingStatus.confirmed:
         color = const Color(0xFF4CAF50);
         break;
@@ -506,9 +507,9 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         status.displayName,
@@ -598,7 +599,7 @@ class _StatCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.2)),
+        side: BorderSide(color: color.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -607,7 +608,7 @@ class _StatCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 24),

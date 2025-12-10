@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/core/config/supabase_config.dart';
 import 'package:dashboard_fi_el_sekka/features/dashboard/domain/activity_event.dart';

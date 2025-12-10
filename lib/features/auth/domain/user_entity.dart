@@ -8,9 +8,10 @@ enum UserType {
 
   String toJson() => name;
 
-  static UserType fromJson(String value) {
+  static UserType fromJson(String? value) {
+    if (value == null) return UserType.student;
     return UserType.values.firstWhere(
-      (type) => type.name == value,
+      (type) => type.name == value.toLowerCase(),
       orElse: () => UserType.student,
     );
   }
@@ -78,26 +79,43 @@ class UserEntity extends Equatable {
     return subscriptionEndDate!.isAfter(DateTime.now());
   }
 
-  /// Factory from JSON
+  /// Factory from JSON with safe parsing
   factory UserEntity.fromJson(Map<String, dynamic> json) {
+    // Safe date parsing
+    DateTime parseDate(dynamic value, DateTime fallback) {
+      if (value == null) return fallback;
+      if (value is DateTime) return value;
+      try {
+        return DateTime.parse(value.toString());
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    DateTime? parseDateNullable(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      try {
+        return DateTime.parse(value.toString());
+      } catch (_) {
+        return null;
+      }
+    }
+
     return UserEntity(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      phone: json['phone'] as String,
-      fullName: json['full_name'] as String,
+      id: json['id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      fullName: json['full_name'] as String? ?? 'غير معروف',
       studentId: json['student_id'] as String?,
       universityId: json['university_id'] as String?,
-      userType: UserType.fromJson(json['user_type'] as String),
+      userType: UserType.fromJson(json['user_type'] as String?),
       avatarUrl: json['avatar_url'] as String?,
       isVerified: json['is_verified'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: parseDate(json['created_at'], DateTime.now()),
       subscriptionType: json['subscription_type'] as String?,
-      subscriptionStartDate: json['subscription_start_date'] != null
-          ? DateTime.parse(json['subscription_start_date'] as String)
-          : null,
-      subscriptionEndDate: json['subscription_end_date'] != null
-          ? DateTime.parse(json['subscription_end_date'] as String)
-          : null,
+      subscriptionStartDate: parseDateNullable(json['subscription_start_date']),
+      subscriptionEndDate: parseDateNullable(json['subscription_end_date']),
       subscriptionStatus: json['subscription_status'] as String?,
     );
   }
