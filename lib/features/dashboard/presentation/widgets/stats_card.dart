@@ -38,7 +38,7 @@ class _StatsCardState extends State<StatsCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         transform: _isHovered
-            ? (Matrix4.identity()..translate(0.0, -4.0))
+            ? (Matrix4.identity()..setTranslationRaw(0.0, -4.0, 0.0))
             : Matrix4.identity(),
         child: GestureDetector(
           onTap: widget.onTap,

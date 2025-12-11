@@ -124,7 +124,7 @@ class _OrderRowState extends State<_OrderRow> {
                             child: Image.network(
                               widget.order.avatarUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Center(
+                              errorBuilder: (_, _, _) => Center(
                                 child: Text(
                                   widget.order.customerName[0].toUpperCase(),
                                   style: TextStyle(

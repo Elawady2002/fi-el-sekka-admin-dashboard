@@ -80,7 +80,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
           statsAsync.when(
             data: (stats) => _buildStatsCards(context, stats),
             loading: () => const SizedBox(height: 100),
-            error: (_, __) => const SizedBox(height: 100),
+            error: (_, _) => const SizedBox(height: 100),
           ),
 
           const SizedBox(height: 24),
@@ -122,7 +122,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<PaymentTransactionStatus?>(
-                    value: _selectedStatus,
+                    initialValue: _selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'الحالة',
                       filled: true,

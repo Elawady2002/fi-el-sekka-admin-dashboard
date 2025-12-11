@@ -326,3 +326,28 @@ Future<bool> addRoute({
     return false;
   }
 }
+
+/// Update a station's type
+Future<bool> updateStationType({
+  required String stationId,
+  required String newType,
+}) async {
+  try {
+    final response = await http.patch(
+      Uri.parse('$_supabaseUrl/rest/v1/stations?id=eq.$stationId'),
+      headers: _getHeaders(),
+      body: json.encode({'station_type': newType}),
+    );
+
+    if (response.statusCode == 200) {
+      debugPrint('✅ Station type updated to $newType');
+      return true;
+    } else {
+      debugPrint('❌ Failed to update station type: ${response.body}');
+      return false;
+    }
+  } catch (e) {
+    debugPrint('❌ Error updating station type: $e');
+    return false;
+  }
+}
