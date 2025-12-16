@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dashboard_fi_el_sekka/core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/features/trips/presentation/trips_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/trips/domain/trip_entity.dart';
@@ -103,9 +104,9 @@ class _TripsPageState extends ConsumerState<TripsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.surfaceDark,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE0E0E0)),
+              border: Border.all(color: AppTheme.borderDark),
             ),
             child: Row(
               children: [
@@ -114,9 +115,12 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'بحث بالسائق أو المعرف...',
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppTheme.textSecondary,
+                      ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: AppTheme.surfaceDarkLighter,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -140,7 +144,7 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                     decoration: InputDecoration(
                       labelText: 'الحالة',
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: AppTheme.surfaceDarkLighter,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -185,9 +189,9 @@ class _TripsPageState extends ConsumerState<TripsPage> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.surfaceDark,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE0E0E0)),
+                border: Border.all(color: AppTheme.borderDark),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -215,14 +219,14 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                             Icon(
                               Icons.directions_bus_outlined,
                               size: 64,
-                              color: Colors.grey[300],
+                              color: AppTheme.textSecondary,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'لا يوجد رحلات',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.grey[600],
+                                color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -236,11 +240,11 @@ class _TripsPageState extends ConsumerState<TripsPage> {
                       horizontalMargin: 24,
                       minWidth: 1000,
                       headingRowColor: WidgetStateProperty.all(
-                        const Color(0xFFF8F9FA),
+                        AppTheme.surfaceDarkLighter,
                       ),
-                      headingTextStyle: const TextStyle(
+                      headingTextStyle: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF495057),
+                        color: AppTheme.textPrimary,
                       ),
                       columns: const [
                         DataColumn2(label: Text('التاريخ'), size: ColumnSize.M),

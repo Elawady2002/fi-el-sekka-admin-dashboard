@@ -14,8 +14,26 @@ class RoutesLocationsPage extends ConsumerStatefulWidget {
       _RoutesLocationsPageState();
 }
 
-class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
+class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage>
+    with TickerProviderStateMixin {
   int _selectedCityIndex = 0;
+  late AnimationController _fadeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _fadeController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
 
   void _refreshData() {
     ref.invalidate(citiesProvider);
@@ -30,7 +48,7 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
     final stationsAsync = ref.watch(stationsProvider);
 
     return Container(
-      color: const Color(0xFFF5F6FA),
+      decoration: const BoxDecoration(color: AppTheme.backgroundDark),
       child: citiesAsync.when(
         data: (cities) => universitiesAsync.when(
           data: (universities) => stationsAsync.when(
@@ -43,51 +61,193 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
               final cityStations = stations
                   .where((s) => s.cityId == currentCity.id)
                   .toList();
-              return Row(
-                children: [
-                  // Sidebar with Universities
-                  _buildSidebar(context, currentCity, cityUniversities, cities),
-                  // Main Kanban Board
-                  Expanded(
-                    child: _buildKanbanBoard(
+              return FadeTransition(
+                opacity: _fadeController,
+                child: Row(
+                  children: [
+                    _buildSidebar(
                       context,
                       currentCity,
-                      cityStations,
+                      cityUniversities,
+                      cities,
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: _buildMainContent(
+                        context,
+                        currentCity,
+                        cityStations,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('خطأ: $e')),
+            loading: () => _buildLoadingState(),
+            error: (e, _) => _buildErrorState(e.toString()),
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('خطأ: $e')),
+          loading: () => _buildLoadingState(),
+          error: (e, _) => _buildErrorState(e.toString()),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('خطأ: $e')),
+        loading: () => _buildLoadingState(),
+        error: (e, _) => _buildErrorState(e.toString()),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceDark,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: AppTheme.primaryPurple,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'جاري التحميل...',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceDark,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.red.withValues(alpha: 0.1),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Colors.red.shade400,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'حدث خطأ',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error,
+              style: TextStyle(color: AppTheme.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _refreshData,
+              icon: const Icon(Icons.refresh),
+              label: const Text('إعادة المحاولة'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.location_city, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          const Text(
-            'لا توجد مدن',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => _showAddCityDialog(context),
-            icon: const Icon(Icons.add),
-            label: const Text('إضافة مدينة'),
-          ),
-        ],
+      child: Container(
+        padding: const EdgeInsets.all(48),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceDark,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 40,
+              offset: const Offset(0, 15),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryPurple.withValues(alpha: 0.1),
+                    AppTheme.accentBlue.withValues(alpha: 0.1),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.location_city_rounded,
+                size: 64,
+                color: AppTheme.primaryPurple,
+              ),
+            ),
+            const SizedBox(height: 28),
+            const Text(
+              'لا توجد مدن بعد',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A2E),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'ابدأ بإضافة مدينة جديدة لإدارة المواقع والمسارات',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: () => _showAddCityDialog(context),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('إضافة مدينة'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primaryPurple,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -99,131 +259,229 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
     List<CityEntity> allCities,
   ) {
     return Container(
-      width: 260,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: Color(0xFFEEF0F5))),
+      width: 300,
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceDark,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          // City Selector
+          // City Selector Header
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFEEF0F5))),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primaryPurple,
+                  AppTheme.primaryPurple.withValues(alpha: 0.85),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               children: [
                 Row(
                   children: [
-                    IconButton(
-                      onPressed: () => setState(() {
-                        _selectedCityIndex =
+                    _buildNavButton(Icons.chevron_right, () {
+                      setState(
+                        () => _selectedCityIndex =
                             (_selectedCityIndex - 1 + allCities.length) %
-                            allCities.length;
-                      }),
-                      icon: const Icon(Icons.chevron_right, size: 24),
-                      style: IconButton.styleFrom(
-                        backgroundColor: const Color(0xFFF5F6FA),
-                      ),
-                    ),
+                            allCities.length,
+                      );
+                    }),
                     Expanded(
-                      child: Text(
-                        currentCity.nameAr,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        children: [
+                          const Text(
+                            'المدينة الحالية',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentCity.nameAr,
+                            style: const TextStyle(
+                              color: AppTheme.surfaceDark,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => setState(() {
-                        _selectedCityIndex =
-                            (_selectedCityIndex + 1) % allCities.length;
-                      }),
-                      icon: const Icon(Icons.chevron_left, size: 24),
-                      style: IconButton.styleFrom(
-                        backgroundColor: const Color(0xFFF5F6FA),
-                      ),
-                    ),
+                    _buildNavButton(Icons.chevron_left, () {
+                      setState(
+                        () => _selectedCityIndex =
+                            (_selectedCityIndex + 1) % allCities.length,
+                      );
+                    }),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
                     allCities.length,
-                    (i) => Container(
-                      width: i == _selectedCityIndex ? 20 : 8,
+                    (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: i == _selectedCityIndex ? 24 : 8,
                       height: 8,
                       margin: const EdgeInsets.symmetric(horizontal: 3),
                       decoration: BoxDecoration(
                         color: i == _selectedCityIndex
-                            ? AppTheme.primaryPurple
-                            : Colors.grey.shade300,
+                            ? Colors.white
+                            : AppTheme.textMuted,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: () => _showAddCityDialog(context),
+                  icon: const Icon(
+                    Icons.add,
+                    size: 16,
+                    color: AppTheme.textSecondary,
+                  ),
+                  label: const Text(
+                    'إضافة مدينة',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          // Universities Header
+
+          // Universities Section
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             child: Row(
               children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.school_rounded,
+                    color: AppTheme.accentBlue,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 const Text(
                   'الجامعات',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
+                    horizontal: 10,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppTheme.surfaceDarkLighter,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '${universities.length}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.accentBlue,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+
           // Universities List
           Expanded(
             child: universities.isEmpty
                 ? Center(
-                    child: Text(
-                      'لا توجد جامعات',
-                      style: TextStyle(color: Colors.grey.shade500),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.school_outlined,
+                          size: 48,
+                          color: AppTheme.textSecondary,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'لا توجد جامعات',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: universities.length,
                     itemBuilder: (context, index) =>
-                        _UniversityItem(university: universities[index]),
+                        _UniversityTile(university: universities[index]),
                   ),
           ),
+
           // Add University Button
           Padding(
             padding: const EdgeInsets.all(16),
-            child: OutlinedButton.icon(
-              onPressed: () => _showAddUniversityDialog(context, currentCity),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('إضافة جامعة'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 44),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _showAddUniversityDialog(context, currentCity),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: AppTheme.accentBlue.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_rounded,
+                        color: AppTheme.accentBlue,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'إضافة جامعة',
+                        style: TextStyle(
+                          color: AppTheme.accentBlue,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -233,106 +491,190 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
     );
   }
 
-  Widget _buildKanbanBoard(
+  Widget _buildNavButton(IconData icon, VoidCallback onPressed) {
+    return Material(
+      color: AppTheme.borderDark,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: AppTheme.surfaceDark, size: 22),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent(
     BuildContext context,
     CityEntity city,
     List<StationEntity> stations,
   ) {
-    // Group stations by type
-    final pickupStations = stations
-        .where((s) => s.stationType == StationType.pickup)
-        .toList();
-    final dropoffStations = stations
-        .where((s) => s.stationType == StationType.dropoff)
-        .toList();
-    final bothStations = stations
-        .where((s) => s.stationType == StationType.both)
-        .toList();
-
-    return Column(
-      children: [
-        // Header
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          color: Colors.white,
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.map_outlined,
-                  color: AppTheme.accentBlue,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'المواقع والمسارات - ${city.nameAr}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A1A2E),
-                ),
-              ),
-              const Spacer(),
-              FilledButton.icon(
-                onPressed: () => _showAddStationDialog(context, city),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('إضافة محطة'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primaryPurple,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceDark,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppTheme.borderDark)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.accentGreen,
+                        AppTheme.accentGreen.withValues(alpha: 0.7),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.accentGreen.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.pin_drop_rounded,
+                    color: AppTheme.surfaceDark,
+                    size: 24,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        // Kanban Columns
-        Expanded(
-          child: Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _KanbanColumn(
-                  title: 'نقطة صعود',
-                  count: pickupStations.length,
-                  color: AppTheme.accentGreen,
-                  stations: pickupStations,
-                  targetType: 'pickup',
-                  onRefresh: _refreshData,
-                ),
                 const SizedBox(width: 20),
-                _KanbanColumn(
-                  title: 'نقطة نزول',
-                  count: dropoffStations.length,
-                  color: AppTheme.accentOrange,
-                  stations: dropoffStations,
-                  targetType: 'dropoff',
-                  onRefresh: _refreshData,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'محطات ${city.nameAr}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentGreen.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${stations.length} محطة',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.accentGreen,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'صعود ونزول',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 20),
-                _KanbanColumn(
-                  title: 'صعود ونزول',
-                  count: bothStations.length,
-                  color: AppTheme.accentBlue,
-                  stations: bothStations,
-                  targetType: 'both',
-                  onRefresh: _refreshData,
+                const Spacer(),
+                FilledButton.icon(
+                  onPressed: () => _showAddStationDialog(context, city),
+                  icon: const Icon(Icons.add_rounded, size: 20),
+                  label: const Text('إضافة محطة'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.accentGreen,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+
+          // Stations Grid
+          Expanded(
+            child: stations.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(28),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentGreen.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.pin_drop_outlined,
+                            size: 56,
+                            color: AppTheme.accentGreen.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'لا توجد محطات',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'اضغط "إضافة محطة" للبدء',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(20),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 1.6,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    itemCount: stations.length,
+                    itemBuilder: (context, index) =>
+                        _StationTile(station: stations[index], index: index),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -341,49 +683,37 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
     final nameEnController = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('إضافة مدينة'),
+      builder: (context) => _CustomDialog(
+        title: 'إضافة مدينة جديدة',
+        icon: Icons.location_city_rounded,
+        iconColor: AppTheme.primaryPurple,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
+            _CustomTextField(
               controller: nameArController,
-              decoration: const InputDecoration(
-                labelText: 'الاسم بالعربي',
-                border: OutlineInputBorder(),
-              ),
+              label: 'الاسم بالعربي',
+              icon: Icons.text_fields,
             ),
-            const SizedBox(height: 12),
-            TextField(
+            const SizedBox(height: 16),
+            _CustomTextField(
               controller: nameEnController,
-              decoration: const InputDecoration(
-                labelText: 'الاسم بالإنجليزي',
-                border: OutlineInputBorder(),
-              ),
+              label: 'الاسم بالإنجليزي',
+              icon: Icons.translate,
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (nameArController.text.isNotEmpty &&
-                  nameEnController.text.isNotEmpty) {
-                await addCity(
-                  nameAr: nameArController.text,
-                  nameEn: nameEnController.text,
-                );
-                if (context.mounted) Navigator.pop(context);
-                _refreshData();
-              }
-            },
-            child: const Text('إضافة'),
-          ),
-        ],
+        onConfirm: () async {
+          if (nameArController.text.isNotEmpty &&
+              nameEnController.text.isNotEmpty) {
+            await addCity(
+              nameAr: nameArController.text,
+              nameEn: nameEnController.text,
+            );
+            if (context.mounted) Navigator.pop(context);
+            _refreshData();
+          }
+        },
       ),
     );
   }
@@ -393,50 +723,38 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
     final nameEnController = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('إضافة جامعة في ${city.nameAr}'),
+      builder: (context) => _CustomDialog(
+        title: 'إضافة جامعة في ${city.nameAr}',
+        icon: Icons.school_rounded,
+        iconColor: AppTheme.accentBlue,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
+            _CustomTextField(
               controller: nameArController,
-              decoration: const InputDecoration(
-                labelText: 'الاسم بالعربي',
-                border: OutlineInputBorder(),
-              ),
+              label: 'الاسم بالعربي',
+              icon: Icons.text_fields,
             ),
-            const SizedBox(height: 12),
-            TextField(
+            const SizedBox(height: 16),
+            _CustomTextField(
               controller: nameEnController,
-              decoration: const InputDecoration(
-                labelText: 'الاسم بالإنجليزي',
-                border: OutlineInputBorder(),
-              ),
+              label: 'الاسم بالإنجليزي',
+              icon: Icons.translate,
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (nameArController.text.isNotEmpty &&
-                  nameEnController.text.isNotEmpty) {
-                await addUniversity(
-                  nameAr: nameArController.text,
-                  nameEn: nameEnController.text,
-                  cityId: city.id,
-                );
-                if (context.mounted) Navigator.pop(context);
-                _refreshData();
-              }
-            },
-            child: const Text('إضافة'),
-          ),
-        ],
+        onConfirm: () async {
+          if (nameArController.text.isNotEmpty &&
+              nameEnController.text.isNotEmpty) {
+            await addUniversity(
+              nameAr: nameArController.text,
+              nameEn: nameEnController.text,
+              cityId: city.id,
+            );
+            if (context.mounted) Navigator.pop(context);
+            _refreshData();
+          }
+        },
       ),
     );
   }
@@ -444,76 +762,121 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
   void _showAddStationDialog(BuildContext context, CityEntity city) {
     final nameArController = TextEditingController();
     final nameEnController = TextEditingController();
-    String selectedType = 'both';
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text('إضافة محطة في ${city.nameAr}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameArController,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم بالعربي',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: nameEnController,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم بالإنجليزي',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: selectedType,
-                decoration: const InputDecoration(
-                  labelText: 'نوع المحطة',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'pickup',
-                    child: Text('🟢 نقطة صعود'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'dropoff',
-                    child: Text('🟠 نقطة نزول'),
-                  ),
-                  DropdownMenuItem(value: 'both', child: Text('🔵 صعود ونزول')),
-                ],
-                onChanged: (v) =>
-                    setDialogState(() => selectedType = v ?? 'both'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء'),
+      builder: (context) => _CustomDialog(
+        title: 'إضافة محطة في ${city.nameAr}',
+        icon: Icons.pin_drop_rounded,
+        iconColor: AppTheme.accentGreen,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _CustomTextField(
+              controller: nameArController,
+              label: 'الاسم بالعربي',
+              icon: Icons.text_fields,
             ),
-            FilledButton(
-              onPressed: () async {
-                if (nameArController.text.isNotEmpty &&
-                    nameEnController.text.isNotEmpty) {
-                  await addStation(
-                    nameAr: nameArController.text,
-                    nameEn: nameEnController.text,
-                    cityId: city.id,
-                    stationType: selectedType,
-                  );
-                  if (context.mounted) Navigator.pop(context);
-                  _refreshData();
-                }
-              },
-              child: const Text('إضافة'),
+            const SizedBox(height: 16),
+            _CustomTextField(
+              controller: nameEnController,
+              label: 'الاسم بالإنجليزي',
+              icon: Icons.translate,
+            ),
+          ],
+        ),
+        onConfirm: () async {
+          if (nameArController.text.isNotEmpty &&
+              nameEnController.text.isNotEmpty) {
+            await addStation(
+              nameAr: nameArController.text,
+              nameEn: nameEnController.text,
+              cityId: city.id,
+              stationType: 'both',
+            );
+            if (context.mounted) Navigator.pop(context);
+            _refreshData();
+          }
+        },
+      ),
+    );
+  }
+}
+
+// ==================== Custom Dialog ====================
+class _CustomDialog extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color iconColor;
+  final Widget content;
+  final VoidCallback onConfirm;
+
+  const _CustomDialog({
+    required this.title,
+    required this.icon,
+    required this.iconColor,
+    required this.content,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Container(
+        width: 400,
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 32, color: iconColor),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            content,
+            const SizedBox(height: 28),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('إلغاء'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: onConfirm,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: iconColor,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('إضافة'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -522,16 +885,47 @@ class _RoutesLocationsPageState extends ConsumerState<RoutesLocationsPage> {
   }
 }
 
-// ==================== University Item ====================
-class _UniversityItem extends StatefulWidget {
-  final UniversityEntity university;
-  const _UniversityItem({required this.university});
+// ==================== Custom TextField ====================
+class _CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+
+  const _CustomTextField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+  });
 
   @override
-  State<_UniversityItem> createState() => _UniversityItemState();
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.primaryPurple, width: 2),
+        ),
+        filled: true,
+        fillColor: AppTheme.surfaceDarkLighter,
+      ),
+    );
+  }
 }
 
-class _UniversityItemState extends State<_UniversityItem> {
+// ==================== University Tile ====================
+class _UniversityTile extends StatefulWidget {
+  final UniversityEntity university;
+  const _UniversityTile({required this.university});
+
+  @override
+  State<_UniversityTile> createState() => _UniversityTileState();
+}
+
+class _UniversityTileState extends State<_UniversityTile> {
   bool _isHovered = false;
 
   @override
@@ -539,31 +933,38 @@ class _UniversityItemState extends State<_UniversityItem> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _isHovered ? const Color(0xFFF5F6FA) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: _isHovered
+              ? AppTheme.accentBlue.withValues(alpha: 0.08)
+              : AppTheme.surfaceDarkLighter,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: _isHovered
-                ? AppTheme.primaryPurple.withValues(alpha: 0.3)
-                : const Color(0xFFEEF0F5),
+                ? AppTheme.accentBlue.withValues(alpha: 0.3)
+                : Colors.transparent,
           ),
         ),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppTheme.primaryPurple.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.accentBlue,
+                    AppTheme.accentBlue.withValues(alpha: 0.7),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                Icons.school,
-                color: AppTheme.primaryPurple,
-                size: 20,
+              child: const Icon(
+                Icons.school_rounded,
+                color: AppTheme.surfaceDark,
+                size: 18,
               ),
             ),
             const SizedBox(width: 12),
@@ -576,16 +977,25 @@ class _UniversityItemState extends State<_UniversityItem> {
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     widget.university.nameEn,
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_left, color: Colors.grey.shade400, size: 20),
+            Icon(
+              Icons.chevron_left,
+              color: _isHovered ? AppTheme.accentBlue : AppTheme.textSecondary,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -593,362 +1003,158 @@ class _UniversityItemState extends State<_UniversityItem> {
   }
 }
 
-// ==================== Kanban Column ====================
-class _KanbanColumn extends StatefulWidget {
-  final String title;
-  final int count;
-  final Color color;
-  final List<StationEntity> stations;
-  final String targetType; // 'pickup', 'dropoff', or 'both'
-  final VoidCallback onRefresh;
-
-  const _KanbanColumn({
-    required this.title,
-    required this.count,
-    required this.color,
-    required this.stations,
-    required this.targetType,
-    required this.onRefresh,
-  });
-
-  @override
-  State<_KanbanColumn> createState() => _KanbanColumnState();
-}
-
-class _KanbanColumnState extends State<_KanbanColumn> {
-  bool _isDragOver = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: DragTarget<StationEntity>(
-        onWillAcceptWithDetails: (details) {
-          // Accept if different type
-          final station = details.data;
-          final currentType = station.stationType.name;
-          return currentType != widget.targetType;
-        },
-        onAcceptWithDetails: (details) async {
-          final station = details.data;
-          await updateStationType(
-            stationId: station.id,
-            newType: widget.targetType,
-          );
-          widget.onRefresh();
-        },
-        onMove: (_) => setState(() => _isDragOver = true),
-        onLeave: (_) => setState(() => _isDragOver = false),
-        builder: (context, candidateData, rejectedData) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: _isDragOver
-                  ? widget.color.withValues(alpha: 0.1)
-                  : const Color(0xFFF5F6FA),
-              borderRadius: BorderRadius.circular(16),
-              border: _isDragOver
-                  ? Border.all(color: widget.color, width: 2)
-                  : null,
-            ),
-            child: Column(
-              children: [
-                // Column Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: widget.color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        widget.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${widget.count}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.more_horiz,
-                        color: Colors.grey.shade500,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-                // Cards
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: widget.stations.length,
-                    itemBuilder: (context, index) => _DraggableStationCard(
-                      station: widget.stations[index],
-                      color: widget.color,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ==================== Draggable Station Card ====================
-class _DraggableStationCard extends StatelessWidget {
+// ==================== Station Tile ====================
+class _StationTile extends StatefulWidget {
   final StationEntity station;
-  final Color color;
-
-  const _DraggableStationCard({required this.station, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return LongPressDraggable<StationEntity>(
-      data: station,
-      delay: const Duration(milliseconds: 150),
-      feedback: Material(
-        elevation: 8,
-        borderRadius: BorderRadius.circular(14),
-        child: SizedBox(
-          width: 220,
-          child: _StationCard(station: station, color: color),
-        ),
-      ),
-      childWhenDragging: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        height: 120,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withValues(alpha: 0.4),
-            width: 2,
-            style: BorderStyle.solid,
-          ),
-          color: color.withValues(alpha: 0.05),
-        ),
-        child: Center(child: Icon(Icons.swap_horiz, color: color, size: 32)),
-      ),
-      child: _StationCard(station: station, color: color),
-    );
-  }
-}
-
-// ==================== Station Card ====================
-class _StationCard extends StatefulWidget {
-  final StationEntity station;
-  final Color color;
-
-  const _StationCard({required this.station, required this.color});
+  final int index;
+  const _StationTile({required this.station, required this.index});
 
   @override
-  State<_StationCard> createState() => _StationCardState();
+  State<_StationTile> createState() => _StationTileState();
 }
 
-class _StationCardState extends State<_StationCard> {
+class _StationTileState extends State<_StationTile> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final colors = [
+      AppTheme.accentGreen,
+      AppTheme.accentBlue,
+      AppTheme.accentOrange,
+      AppTheme.primaryPurple,
+    ];
+    final color = colors[widget.index % colors.length];
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: AppTheme.surfaceDark,
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: _isHovered
-                ? widget.color.withValues(alpha: 0.4)
-                : const Color(0xFFEEF0F5),
+                ? color.withValues(alpha: 0.5)
+                : AppTheme.borderDark,
+            width: _isHovered ? 2 : 1,
           ),
           boxShadow: _isHovered
               ? [
                   BoxShadow(
-                    color: widget.color.withValues(alpha: 0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: color.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
                 ]
               : [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tag + Menu
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: widget.color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    widget.station.stationType.displayName,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: widget.color,
+                    gradient: LinearGradient(
+                      colors: [color, color.withValues(alpha: 0.7)],
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.pin_drop_rounded,
+                    color: AppTheme.surfaceDark,
+                    size: 20,
                   ),
                 ),
                 const Spacer(),
-                Icon(Icons.more_vert, color: Colors.grey.shade400, size: 18),
+                AnimatedOpacity(
+                  opacity: _isHovered ? 1 : 0.4,
+                  duration: const Duration(milliseconds: 200),
+                  child: PopupMenuButton(
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: AppTheme.textSecondary,
+                      size: 20,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 18),
+                            SizedBox(width: 8),
+                            Text('تعديل'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('حذف', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Title
+            const Spacer(),
             Text(
               widget.station.nameAr,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: Color(0xFF1A1A2E),
+                fontSize: 16,
+                color: AppTheme.textPrimary,
               ),
-            ),
-            const SizedBox(height: 4),
-            // Description
-            Text(
-              widget.station.nameEn,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 14),
-            // Progress
+            const SizedBox(height: 6),
+            Text(
+              widget.station.nameEn,
+              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F6FA),
-                borderRadius: BorderRadius.circular(6),
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle_outline,
-                    size: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '1/1',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ],
+              child: Text(
+                'صعود ونزول',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            // Footer
-            Row(
-              children: [
-                // Avatar Stack
-                SizedBox(
-                  width: 50,
-                  height: 24,
-                  child: Stack(
-                    children: [
-                      for (int i = 0; i < 2; i++)
-                        Positioned(
-                          left: i * 16.0,
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: [
-                                const Color(0xFFFF6B6B),
-                                const Color(0xFF4ECDC4),
-                              ][i],
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: Center(
-                              child: Text(
-                                ['ع', 'م'][i],
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.remove_red_eye_outlined,
-                  size: 14,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '2',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.chat_bubble_outline,
-                  size: 14,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '0',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.attach_file_outlined,
-                  size: 14,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '0',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                ),
-              ],
             ),
           ],
         ),

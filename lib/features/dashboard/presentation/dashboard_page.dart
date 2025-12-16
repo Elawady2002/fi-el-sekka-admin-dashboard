@@ -4,7 +4,10 @@ import 'package:dashboard_fi_el_sekka/features/auth/presentation/auth_provider.d
 import 'package:dashboard_fi_el_sekka/features/dashboard/presentation/dashboard_stats_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/domain/subscription_entity.dart';
+import 'package:dashboard_fi_el_sekka/features/subscriptions/data/subscription_actions.dart';
+import 'package:dashboard_fi_el_sekka/features/bookings/presentation/bookings_provider.dart';
 import 'package:dashboard_fi_el_sekka/core/theme/app_theme.dart';
+import 'package:dashboard_fi_el_sekka/core/widgets/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -26,92 +29,127 @@ class DashboardPage extends ConsumerWidget {
           _WelcomeHeader(userName: userName),
           const SizedBox(height: 24),
 
-          // Stats Cards
-          statsAsync.when(
-            data: (stats) => _StatsRow(stats: stats),
-            loading: () => const _StatsRowLoading(),
-            error: (_, _) => const SizedBox(height: 100),
+          // Quick Actions Bar
+          _QuickActionsBar(
+            statsAsync: statsAsync,
+            subscriptionsAsync: subscriptionsAsync,
           ),
           const SizedBox(height: 24),
 
-          // Active Subscribers Section
-          Text(
-            'المشتركين النشطين',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          // Compact Stats Grid
+          statsAsync.when(
+            data: (stats) => CompactStatsGrid(
+              stats: [
+                CompactStat(
+                  label: 'المستخدمين',
+                  value: '${stats.totalUsers}',
+                  icon: Icons.people_rounded,
+                  color: AppTheme.accentBlue,
+                  onTap: () => context.go('/users'),
+                ),
+                CompactStat(
+                  label: 'المشتركين النشطين',
+                  value: '${stats.activeSubscriptions}',
+                  icon: Icons.card_membership_rounded,
+                  color: AppTheme.accentGreen,
+                  onTap: () => context.go('/subscriptions'),
+                ),
+                CompactStat(
+                  label: 'إجمالي الحجوزات',
+                  value: '${stats.totalBookings}',
+                  icon: Icons.book_online_rounded,
+                  color: AppTheme.chartBlue,
+                  onTap: () => context.go('/bookings'),
+                ),
+                CompactStat(
+                  label: 'الإيرادات الشهرية',
+                  value: '${stats.monthlyRevenue.toStringAsFixed(0)} ج.م',
+                  icon: Icons.payments_rounded,
+                  color: AppTheme.primaryPurple,
+                  onTap: () => context.go('/payments'),
+                ),
+              ],
+            ),
+            loading: () => const _StatsLoading(),
+            error: (_, __) => const SizedBox(height: 100),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 28),
+
+          // Pending Actions Section
+          _SectionHeader(
+            title: '🔔 محتاج تعمل دلوقتي',
+            trailing: TextButton.icon(
+              onPressed: () => context.go('/subscriptions'),
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+              label: const Text('عرض الكل'),
+            ),
+          ),
+          const SizedBox(height: 12),
 
           subscriptionsAsync.when(
             data: (subscriptions) {
-              final activeSubscriptions = subscriptions
-                  .where((s) => s.isActive)
+              final pendingSubscriptions = subscriptions
+                  .where((s) => s.status == SubscriptionStatus.pending)
                   .toList();
 
-              if (activeSubscriptions.isEmpty) {
-                return _EmptyState(
-                  icon: Icons.person_off_outlined,
-                  message: 'لا يوجد مشتركين نشطين حالياً',
-                );
+              if (pendingSubscriptions.isEmpty) {
+                return _EmptyPendingState();
               }
 
-              return _SubscribersTable(subscriptions: activeSubscriptions);
+              return _PendingActionsList(
+                subscriptions: pendingSubscriptions,
+                onRefresh: () => ref.invalidate(subscriptionsProvider),
+              );
             },
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            error: (error, _) => _EmptyState(
-              icon: Icons.error_outline,
-              message: 'حدث خطأ في تحميل البيانات',
-            ),
+            loading: () => const _PendingActionsLoading(),
+            error: (_, __) => _ErrorState(),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
-          // Quick Actions
+          // Quick Navigation
+          _SectionHeader(title: '⚡ الإجراءات السريعة'),
+          const SizedBox(height: 12),
+
           Row(
             children: [
               Expanded(
-                child: _QuickActionCard(
-                  icon: Icons.person_add_rounded,
-                  title: 'إدارة المستخدمين',
-                  subtitle: 'عرض وإدارة جميع المستخدمين',
+                child: _NavigationCard(
+                  icon: Icons.people_rounded,
+                  title: 'المستخدمين',
+                  subtitle: 'عرض وإدارة المستخدمين',
                   color: AppTheme.accentBlue,
                   onTap: () => context.go('/users'),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                child: _QuickActionCard(
+                child: _NavigationCard(
                   icon: Icons.card_membership_rounded,
-                  title: 'إدارة الاشتراكات',
-                  subtitle: 'عرض جميع الاشتراكات والخطط',
+                  title: 'الاشتراكات',
+                  subtitle: 'إدارة الاشتراكات',
                   color: AppTheme.primaryPurple,
                   onTap: () => context.go('/subscriptions'),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                child: _QuickActionCard(
-                  icon: Icons.directions_bus_rounded,
-                  title: 'إدارة الرحلات',
-                  subtitle: 'جدولة الرحلات والمسارات',
-                  color: AppTheme.accentOrange,
-                  onTap: () => context.go('/trips'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _QuickActionCard(
-                  icon: Icons.book_online_rounded,
-                  title: 'إدارة الحجوزات',
-                  subtitle: 'عرض ومتابعة الحجوزات',
+                child: _NavigationCard(
+                  icon: Icons.calendar_today_rounded,
+                  title: 'الحجوزات',
+                  subtitle: 'متابعة الحجوزات',
                   color: AppTheme.accentGreen,
                   onTap: () => context.go('/bookings'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _NavigationCard(
+                  icon: Icons.map_rounded,
+                  title: 'المواقع',
+                  subtitle: 'المدن والمحطات',
+                  color: AppTheme.accentOrange,
+                  onTap: () => context.go('/routes-locations'),
                 ),
               ),
             ],
@@ -122,7 +160,7 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
-// Welcome Header
+// ==================== Welcome Header ====================
 class _WelcomeHeader extends StatelessWidget {
   final String userName;
 
@@ -140,7 +178,7 @@ class _WelcomeHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$greeting, $userName 👋',
+              '$greeting، $userName! 👋',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -184,459 +222,80 @@ class _WelcomeHeader extends StatelessWidget {
 
   String _getGreeting(int hour) {
     if (hour < 12) return 'صباح الخير';
-    if (hour < 17) return 'مساء الخير';
     return 'مساء الخير';
   }
 }
 
-// Stats Row
-class _StatsRow extends StatelessWidget {
-  final DashboardStats stats;
+// ==================== Quick Actions Bar ====================
+class _QuickActionsBar extends StatelessWidget {
+  final AsyncValue<DashboardStats> statsAsync;
+  final AsyncValue<List<SubscriptionEntity>> subscriptionsAsync;
 
-  const _StatsRow({required this.stats});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // First Row - 3 cards
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                title: 'المستخدمين',
-                value: '${stats.totalUsers}',
-                icon: Icons.people_rounded,
-                color: AppTheme.accentBlue,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _StatCard(
-                title: 'الاشتراكات النشطة',
-                value: '${stats.activeSubscriptions}',
-                icon: Icons.card_membership_rounded,
-                color: AppTheme.primaryPurple,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _StatCard(
-                title: 'إجمالي الحجوزات',
-                value: '${stats.totalBookings}',
-                icon: Icons.book_online_rounded,
-                color: AppTheme.chartBlue,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // Second Row - 2 cards
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                title: 'رحلات اليوم',
-                value: '${stats.todaysTrips}',
-                icon: Icons.directions_bus_rounded,
-                color: AppTheme.accentOrange,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _StatCard(
-                title: 'الإيرادات الشهرية',
-                value: '${stats.monthlyRevenue.toStringAsFixed(0)} ج.م',
-                icon: Icons.payments_rounded,
-                color: AppTheme.accentGreen,
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Empty space to balance the row
-            const Expanded(child: SizedBox()),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _StatsRowLoading extends StatelessWidget {
-  const _StatsRowLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(
-        4,
-        (index) => Expanded(
-          child: Container(
-            height: 100,
-            margin: EdgeInsets.only(right: index < 3 ? 16 : 0),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceWhite,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.borderLight),
-            ),
-            child: const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Simple Stat Card
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
+  const _QuickActionsBar({
+    required this.statsAsync,
+    required this.subscriptionsAsync,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderLight),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    final pendingCount = subscriptionsAsync.maybeWhen(
+      data: (subs) =>
+          subs.where((s) => s.status == SubscriptionStatus.pending).length,
+      orElse: () => 0,
     );
-  }
-}
 
-// Subscribers Table
-class _SubscribersTable extends StatelessWidget {
-  final List<SubscriptionEntity> subscriptions;
-
-  const _SubscribersTable({required this.subscriptions});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderLight),
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundLight,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-            ),
-            child: Row(
-              children: [
-                _TableHeaderCell(label: 'المستخدم', flex: 3),
-                _TableHeaderCell(label: 'البريد الإلكتروني', flex: 3),
-                _TableHeaderCell(label: 'نوع الخطة', flex: 2),
-                _TableHeaderCell(label: 'تاريخ الانتهاء', flex: 2),
-                _TableHeaderCell(label: 'المبلغ', flex: 2),
-                _TableHeaderCell(label: 'الحالة', flex: 2),
-              ],
-            ),
-          ),
-          // Rows
-          ...subscriptions
-              .take(10)
-              .map((sub) => _SubscriberRow(subscription: sub)),
-
-          // Show More Button
-          if (subscriptions.length > 10)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              child: TextButton(
-                onPressed: () => context.go('/subscriptions'),
-                child: Text('عرض الكل (${subscriptions.length} مشترك)'),
-              ),
-            ),
-        ],
-      ),
+    final todaysTrips = statsAsync.maybeWhen(
+      data: (stats) => stats.todaysTrips,
+      orElse: () => 0,
     );
-  }
-}
 
-class _TableHeaderCell extends StatelessWidget {
-  final String label;
-  final int flex;
-
-  const _TableHeaderCell({required this.label, required this.flex});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: AppTheme.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class _SubscriberRow extends StatelessWidget {
-  final SubscriptionEntity subscription;
-
-  const _SubscriberRow({required this.subscription});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppTheme.borderLight)),
-      ),
-      child: Row(
-        children: [
-          // User Name
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryPurple.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      subscription.userName.isNotEmpty
-                          ? subscription.userName[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        color: AppTheme.primaryPurple,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    subscription.userName,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Email
-          Expanded(
-            flex: 3,
-            child: Text(
-              subscription.userEmail,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          // Plan Type
-          Expanded(flex: 2, child: _PlanBadge(type: subscription.type)),
-
-          // End Date
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _formatDate(subscription.endDate),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (subscription.daysRemaining > 0)
-                  Text(
-                    '${subscription.daysRemaining} يوم متبقي',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: subscription.daysRemaining < 7
-                          ? AppTheme.accentRed
-                          : AppTheme.textSecondary,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Amount
-          Expanded(
-            flex: 2,
-            child: Text(
-              '${subscription.amount.toStringAsFixed(0)} ج.م',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-
-          // Status
-          Expanded(flex: 2, child: _StatusBadge(status: subscription.status)),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
-}
-
-// Plan Badge
-class _PlanBadge extends StatelessWidget {
-  final SubscriptionType type;
-
-  const _PlanBadge({required this.type});
-
-  @override
-  Widget build(BuildContext context) {
-    Color color;
-    switch (type) {
-      case SubscriptionType.monthly:
-        color = AppTheme.accentBlue;
-      case SubscriptionType.semester:
-        color = AppTheme.primaryPurple;
-      case SubscriptionType.yearly:
-        color = AppTheme.accentGreen;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        type.displayName,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-}
-
-// Status Badge
-class _StatusBadge extends StatelessWidget {
-  final SubscriptionStatus status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    Color color;
-    switch (status) {
-      case SubscriptionStatus.active:
-        color = AppTheme.accentGreen;
-      case SubscriptionStatus.expired:
-        color = AppTheme.accentRed;
-      case SubscriptionStatus.pending:
-        color = AppTheme.accentOrange;
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
       children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          status.displayName,
-          style: TextStyle(
-            color: color,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+        if (pendingCount > 0)
+          _QuickActionChip(
+            icon: Icons.pending_actions_rounded,
+            label: '$pendingCount اشتراكات معلقة',
+            color: AppTheme.accentOrange,
+            onTap: () => context.go('/subscriptions'),
           ),
+        if (todaysTrips > 0)
+          _QuickActionChip(
+            icon: Icons.directions_bus_rounded,
+            label: '$todaysTrips رحلات اليوم',
+            color: AppTheme.accentBlue,
+            onTap: () => context.go('/trips'),
+          ),
+        _QuickActionChip(
+          icon: Icons.payments_rounded,
+          label: 'المدفوعات',
+          color: AppTheme.primaryPurple,
+          onTap: () => context.go('/payments'),
         ),
       ],
     );
   }
 }
 
-// Quick Action Card
-class _QuickActionCard extends StatefulWidget {
+class _QuickActionChip extends StatefulWidget {
   final IconData icon;
-  final String title;
-  final String subtitle;
+  final String label;
   final Color color;
   final VoidCallback onTap;
 
-  const _QuickActionCard({
+  const _QuickActionChip({
     required this.icon,
-    required this.title,
-    required this.subtitle,
+    required this.label,
     required this.color,
     required this.onTap,
   });
 
   @override
-  State<_QuickActionCard> createState() => _QuickActionCardState();
+  State<_QuickActionChip> createState() => _QuickActionChipState();
 }
 
-class _QuickActionCardState extends State<_QuickActionCard> {
+class _QuickActionChipState extends State<_QuickActionChip> {
   bool _isHovered = false;
 
   @override
@@ -648,10 +307,223 @@ class _QuickActionCardState extends State<_QuickActionCard> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: _isHovered
-                ? widget.color.withValues(alpha: 0.05)
+                ? widget.color
+                : widget.color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.color.withValues(alpha: _isHovered ? 1 : 0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.icon,
+                size: 18,
+                color: _isHovered ? Colors.white : widget.color,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  color: _isHovered ? Colors.white : widget.color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ==================== Section Header ====================
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final Widget? trailing;
+
+  const _SectionHeader({required this.title, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        if (trailing != null) trailing!,
+      ],
+    );
+  }
+}
+
+// ==================== Pending Actions List ====================
+class _PendingActionsList extends StatelessWidget {
+  final List<SubscriptionEntity> subscriptions;
+  final VoidCallback onRefresh;
+
+  const _PendingActionsList({
+    required this.subscriptions,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: Column(
+        children: subscriptions.take(5).map((sub) {
+          return _PendingSubscriptionItem(
+            subscription: sub,
+            onRefresh: onRefresh,
+            isLast:
+                subscriptions.indexOf(sub) ==
+                (subscriptions.length > 5 ? 4 : subscriptions.length - 1),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _PendingSubscriptionItem extends StatelessWidget {
+  final SubscriptionEntity subscription;
+  final VoidCallback onRefresh;
+  final bool isLast;
+
+  const _PendingSubscriptionItem({
+    required this.subscription,
+    required this.onRefresh,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: AppTheme.borderLight)),
+      ),
+      child: PendingActionItem(
+        icon: Icons.card_membership_rounded,
+        iconColor: AppTheme.accentOrange,
+        title: subscription.userName,
+        subtitle:
+            '${subscription.type.displayName} - ${subscription.amount.toStringAsFixed(0)} ج.م',
+        timeAgo: _getTimeAgo(subscription.createdAt),
+        quickActions: [
+          QuickAction(
+            label: 'موافقة',
+            icon: Icons.check_circle_outline,
+            color: AppTheme.accentGreen,
+            onPressed: () => _approveSubscription(context),
+          ),
+          QuickAction(
+            label: 'رفض',
+            icon: Icons.cancel_outlined,
+            color: AppTheme.accentRed,
+            onPressed: () => _rejectSubscription(context),
+          ),
+        ],
+        onTap: () => context.go('/subscriptions'),
+      ),
+    );
+  }
+
+  String _getTimeAgo(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 60) {
+      return 'منذ ${diff.inMinutes} دقيقة';
+    } else if (diff.inHours < 24) {
+      return 'منذ ${diff.inHours} ساعة';
+    } else {
+      return 'منذ ${diff.inDays} يوم';
+    }
+  }
+
+  Future<void> _approveSubscription(BuildContext context) async {
+    final success = await SubscriptionActions.approveSubscription(
+      subscription.id,
+    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'تمت الموافقة بنجاح ✓' : 'حدث خطأ'),
+          backgroundColor: success ? AppTheme.accentGreen : AppTheme.accentRed,
+        ),
+      );
+      if (success) onRefresh();
+    }
+  }
+
+  Future<void> _rejectSubscription(BuildContext context) async {
+    final success = await SubscriptionActions.rejectSubscription(
+      subscription.id,
+    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'تم الرفض' : 'حدث خطأ'),
+          backgroundColor: success ? AppTheme.accentOrange : AppTheme.accentRed,
+        ),
+      );
+      if (success) onRefresh();
+    }
+  }
+}
+
+// ==================== Navigation Card ====================
+class _NavigationCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _NavigationCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_NavigationCard> createState() => _NavigationCardState();
+}
+
+class _NavigationCardState extends State<_NavigationCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? widget.color.withValues(alpha: 0.08)
                 : AppTheme.surfaceWhite,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -663,15 +535,14 @@ class _QuickActionCardState extends State<_QuickActionCard> {
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: widget.color.withValues(alpha: 0.1),
+                  color: widget.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(widget.icon, color: widget.color, size: 22),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -705,18 +576,57 @@ class _QuickActionCardState extends State<_QuickActionCard> {
   }
 }
 
-// Empty State
-class _EmptyState extends StatelessWidget {
-  final IconData icon;
-  final String message;
+// ==================== Loading States ====================
+class _StatsLoading extends StatelessWidget {
+  const _StatsLoading();
 
-  const _EmptyState({required this.icon, required this.message});
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(
+        4,
+        (index) => Expanded(
+          child: Container(
+            height: 100,
+            margin: EdgeInsets.only(left: index < 3 ? 12 : 0),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceWhite,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.borderLight),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PendingActionsLoading extends StatelessWidget {
+  const _PendingActionsLoading();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(40),
+      height: 150,
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+    );
+  }
+}
+
+// ==================== Empty State ====================
+class _EmptyPendingState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: AppTheme.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
@@ -724,10 +634,48 @@ class _EmptyState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: AppTheme.textSecondary),
+          Icon(
+            Icons.check_circle_outline,
+            size: 48,
+            color: AppTheme.accentGreen,
+          ),
           const SizedBox(height: 12),
           Text(
-            message,
+            'مفيش حاجة معلقة! 🎉',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'كل الاشتراكات تم التعامل معها',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==================== Error State ====================
+class _ErrorState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.error_outline, size: 48, color: AppTheme.accentRed),
+          const SizedBox(height: 12),
+          Text(
+            'حدث خطأ في تحميل البيانات',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),

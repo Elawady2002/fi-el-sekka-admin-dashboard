@@ -150,7 +150,7 @@ class OrderLineChart extends StatelessWidget {
                         return LineTooltipItem(
                           '${spot.y.toInt()}',
                           const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.surfaceDark,
                             fontWeight: FontWeight.bold,
                           ),
                         );

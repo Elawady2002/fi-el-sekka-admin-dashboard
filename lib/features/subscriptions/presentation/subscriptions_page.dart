@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:dashboard_fi_el_sekka/core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/domain/subscription_entity.dart';
+import 'package:dashboard_fi_el_sekka/features/subscriptions/data/subscription_actions.dart';
 import 'package:data_table_2/data_table_2.dart';
 
 class SubscriptionsPage extends ConsumerStatefulWidget {
@@ -98,9 +100,9 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.surfaceDark,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE0E0E0)),
+              border: Border.all(color: AppTheme.borderDark),
             ),
             child: Row(
               children: [
@@ -109,9 +111,12 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'بحث بالاسم أو البريد الإلكتروني...',
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppTheme.textSecondary,
+                      ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: AppTheme.surfaceDarkLighter,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -135,7 +140,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                     decoration: InputDecoration(
                       labelText: 'نوع الاشتراك',
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: AppTheme.surfaceDarkLighter,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -174,7 +179,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                     decoration: InputDecoration(
                       labelText: 'الحالة',
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: AppTheme.surfaceDarkLighter,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -215,9 +220,9 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.surfaceDark,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE0E0E0)),
+                border: Border.all(color: AppTheme.borderDark),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -261,11 +266,11 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                       horizontalMargin: 24,
                       minWidth: 1000,
                       headingRowColor: WidgetStateProperty.all(
-                        const Color(0xFFF8F9FA),
+                        AppTheme.surfaceDarkLighter,
                       ),
-                      headingTextStyle: const TextStyle(
+                      headingTextStyle: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF495057),
+                        color: AppTheme.textPrimary,
                       ),
                       columns: const [
                         DataColumn2(
@@ -370,24 +375,40 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                                       _showSubscriptionDetails(context, sub);
                                     },
                                   ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 20,
+                                  if (sub.status ==
+                                      SubscriptionStatus.pending) ...[
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.check_circle_outline,
+                                        size: 20,
+                                        color: AppTheme.accentGreen,
+                                      ),
+                                      tooltip: 'موافقة',
+                                      onPressed: () =>
+                                          _approveSubscription(context, sub),
                                     ),
-                                    tooltip: 'تعديل',
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'قريباً - تعديل الاشتراك',
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.cancel_outlined,
+                                        size: 20,
+                                        color: Colors.red.shade400,
+                                      ),
+                                      tooltip: 'رفض',
+                                      onPressed: () =>
+                                          _rejectSubscription(context, sub),
+                                    ),
+                                  ] else if (sub.status ==
+                                      SubscriptionStatus.active)
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.block,
+                                        size: 20,
+                                        color: Colors.orange.shade400,
+                                      ),
+                                      tooltip: 'إلغاء الاشتراك',
+                                      onPressed: () =>
+                                          _cancelSubscription(context, sub),
+                                    ),
                                 ],
                               ),
                             ),
@@ -603,6 +624,218 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
         ],
       ),
     );
+  }
+
+  // Approve a pending subscription
+  Future<void> _approveSubscription(
+    BuildContext context,
+    SubscriptionEntity sub,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد الموافقة'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('هل تريد الموافقة على اشتراك ${sub.userName}؟'),
+            const SizedBox(height: 16),
+            Text('نوع الاشتراك: ${sub.type.displayName}'),
+            Text('المبلغ: ${sub.amount.toStringAsFixed(0)} ج.م'),
+            if (sub.paymentProofUrl != null) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'إثبات الدفع:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.borderDark),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    sub.paymentProofUrl!,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) =>
+                        const Center(child: Text('تعذر تحميل الصورة')),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.accentGreen,
+            ),
+            child: const Text('موافقة'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await SubscriptionActions.approveSubscription(sub.id);
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم الموافقة على الاشتراك بنجاح'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          ref.invalidate(subscriptionsProvider);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('حدث خطأ أثناء الموافقة على الاشتراك'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // Reject a pending subscription
+  Future<void> _rejectSubscription(
+    BuildContext context,
+    SubscriptionEntity sub,
+  ) async {
+    final reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد الرفض'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('هل تريد رفض اشتراك ${sub.userName}؟'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: 'سبب الرفض (اختياري)',
+                hintText: 'أدخل سبب الرفض...',
+                filled: true,
+                fillColor: AppTheme.surfaceDarkLighter,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('رفض'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await SubscriptionActions.rejectSubscription(
+        sub.id,
+        reason: reasonController.text.isNotEmpty ? reasonController.text : null,
+      );
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم رفض الاشتراك'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          ref.invalidate(subscriptionsProvider);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('حدث خطأ أثناء رفض الاشتراك'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // Cancel an active subscription
+  Future<void> _cancelSubscription(
+    BuildContext context,
+    SubscriptionEntity sub,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد إلغاء الاشتراك'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('هل تريد إلغاء اشتراك ${sub.userName}؟'),
+            const SizedBox(height: 8),
+            Text(
+              'هذا الإجراء سيلغي الاشتراك فوراً',
+              style: TextStyle(color: Colors.orange.shade700),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('إلغاء الاشتراك'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await SubscriptionActions.cancelSubscription(sub.id);
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم إلغاء الاشتراك بنجاح'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          ref.invalidate(subscriptionsProvider);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('حدث خطأ أثناء إلغاء الاشتراك'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }
 

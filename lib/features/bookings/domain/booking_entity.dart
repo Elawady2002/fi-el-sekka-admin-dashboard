@@ -120,6 +120,7 @@ class BookingEntity extends Equatable {
   final String? dropoffStationId;
   final String? pickupStationName;
   final String? dropoffStationName;
+  final String? routeName;
   final String? departureTime;
   final String? returnTime;
   final BookingStatus status;
@@ -142,6 +143,7 @@ class BookingEntity extends Equatable {
     this.dropoffStationId,
     this.pickupStationName,
     this.dropoffStationName,
+    this.routeName,
     this.departureTime,
     this.returnTime,
     required this.status,
@@ -185,6 +187,7 @@ class BookingEntity extends Equatable {
       dropoffStationId: json['dropoff_station_id'] as String?,
       pickupStationName: json['pickup_station']?['name_ar'] as String?,
       dropoffStationName: json['dropoff_station']?['name_ar'] as String?,
+      routeName: json['route_name'] as String?,
       departureTime: json['departure_time'] as String?,
       returnTime: json['return_time'] as String?,
       status: BookingStatus.fromString(json['status'] as String?),
@@ -220,6 +223,7 @@ class BookingEntity extends Equatable {
     dropoffStationId,
     pickupStationName,
     dropoffStationName,
+    routeName,
     departureTime,
     returnTime,
     status,

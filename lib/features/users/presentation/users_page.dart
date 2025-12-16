@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dashboard_fi_el_sekka/core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dashboard_fi_el_sekka/features/users/presentation/users_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/auth/domain/user_entity.dart';
@@ -86,9 +87,9 @@ class _UsersPageState extends ConsumerState<UsersPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.surfaceDark,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE0E0E0)),
+              border: Border.all(color: AppTheme.borderDark),
             ),
             child: Row(
               children: [
@@ -97,9 +98,12 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'بحث بالاسم أو البريد...',
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppTheme.textSecondary,
+                      ),
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA), // Very light gray
+                      fillColor: AppTheme.surfaceDarkLighter,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -122,7 +126,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                     initialValue: _selectedUserType,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: const Color(0xFFF8F9FA),
+                      fillColor: AppTheme.surfaceDarkLighter,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -166,9 +170,9 @@ class _UsersPageState extends ConsumerState<UsersPage> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.surfaceDark,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE0E0E0)),
+                border: Border.all(color: AppTheme.borderDark),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -192,14 +196,14 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                             Icon(
                               Icons.search_off_rounded,
                               size: 64,
-                              color: Colors.grey[300],
+                              color: AppTheme.textSecondary,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'لا يوجد نتائج',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.grey[600],
+                                color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -213,11 +217,11 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                       horizontalMargin: 24,
                       minWidth: 900,
                       headingRowColor: WidgetStateProperty.all(
-                        const Color(0xFFF8F9FA),
+                        AppTheme.surfaceDarkLighter,
                       ),
-                      headingTextStyle: const TextStyle(
+                      headingTextStyle: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF495057),
+                        color: AppTheme.textPrimary,
                       ),
                       columns: const [
                         DataColumn2(label: Text('الاسم'), size: ColumnSize.L),
