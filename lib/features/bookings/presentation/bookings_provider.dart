@@ -204,7 +204,7 @@ final bookingsByDateProvider = Provider<Map<DateTime, List<BookingEntity>>>((
       return map;
     },
     loading: () => {},
-    error: (_, __) => {},
+    error: (_, _) => {},
   );
 });
 

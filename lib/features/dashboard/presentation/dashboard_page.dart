@@ -5,9 +5,15 @@ import 'package:dashboard_fi_el_sekka/features/dashboard/presentation/dashboard_
 import 'package:dashboard_fi_el_sekka/features/subscriptions/presentation/subscriptions_provider.dart';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/domain/subscription_entity.dart';
 import 'package:dashboard_fi_el_sekka/features/subscriptions/data/subscription_actions.dart';
-import 'package:dashboard_fi_el_sekka/features/bookings/presentation/bookings_provider.dart';
+
 import 'package:dashboard_fi_el_sekka/core/theme/app_theme.dart';
 import 'package:dashboard_fi_el_sekka/core/widgets/widgets.dart';
+import 'package:dashboard_fi_el_sekka/features/routes/presentation/routes_provider.dart';
+import 'package:dashboard_fi_el_sekka/features/routes/domain/city_entity.dart';
+import 'package:dashboard_fi_el_sekka/features/routes/domain/station_entity.dart';
+import 'package:dashboard_fi_el_sekka/features/routes/domain/university_entity.dart';
+import 'package:dashboard_fi_el_sekka/features/bookings/presentation/bookings_provider.dart';
+import 'package:dashboard_fi_el_sekka/features/bookings/domain/booking_entity.dart';
 import 'package:go_router/go_router.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -27,13 +33,6 @@ class DashboardPage extends ConsumerWidget {
         children: [
           // Welcome Header
           _WelcomeHeader(userName: userName),
-          const SizedBox(height: 24),
-
-          // Quick Actions Bar
-          _QuickActionsBar(
-            statsAsync: statsAsync,
-            subscriptionsAsync: subscriptionsAsync,
-          ),
           const SizedBox(height: 24),
 
           // Compact Stats Grid
@@ -71,21 +70,11 @@ class DashboardPage extends ConsumerWidget {
               ],
             ),
             loading: () => const _StatsLoading(),
-            error: (_, __) => const SizedBox(height: 100),
+            error: (_, _) => const SizedBox(height: 100),
           ),
           const SizedBox(height: 28),
 
-          // Pending Actions Section
-          _SectionHeader(
-            title: '🔔 محتاج تعمل دلوقتي',
-            trailing: TextButton.icon(
-              onPressed: () => context.go('/subscriptions'),
-              icon: const Icon(Icons.visibility_outlined, size: 18),
-              label: const Text('عرض الكل'),
-            ),
-          ),
-          const SizedBox(height: 12),
-
+          // Pending Actions (without title)
           subscriptionsAsync.when(
             data: (subscriptions) {
               final pendingSubscriptions = subscriptions
@@ -93,7 +82,7 @@ class DashboardPage extends ConsumerWidget {
                   .toList();
 
               if (pendingSubscriptions.isEmpty) {
-                return _EmptyPendingState();
+                return const SizedBox.shrink();
               }
 
               return _PendingActionsList(
@@ -101,59 +90,12 @@ class DashboardPage extends ConsumerWidget {
                 onRefresh: () => ref.invalidate(subscriptionsProvider),
               );
             },
-            loading: () => const _PendingActionsLoading(),
-            error: (_, __) => _ErrorState(),
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
 
-          const SizedBox(height: 28),
-
-          // Quick Navigation
-          _SectionHeader(title: '⚡ الإجراءات السريعة'),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: _NavigationCard(
-                  icon: Icons.people_rounded,
-                  title: 'المستخدمين',
-                  subtitle: 'عرض وإدارة المستخدمين',
-                  color: AppTheme.accentBlue,
-                  onTap: () => context.go('/users'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _NavigationCard(
-                  icon: Icons.card_membership_rounded,
-                  title: 'الاشتراكات',
-                  subtitle: 'إدارة الاشتراكات',
-                  color: AppTheme.primaryPurple,
-                  onTap: () => context.go('/subscriptions'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _NavigationCard(
-                  icon: Icons.calendar_today_rounded,
-                  title: 'الحجوزات',
-                  subtitle: 'متابعة الحجوزات',
-                  color: AppTheme.accentGreen,
-                  onTap: () => context.go('/bookings'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _NavigationCard(
-                  icon: Icons.map_rounded,
-                  title: 'المواقع',
-                  subtitle: 'المدن والمحطات',
-                  color: AppTheme.accentOrange,
-                  onTap: () => context.go('/routes-locations'),
-                ),
-              ),
-            ],
-          ),
+          // City-Based Passenger Tracking (without title)
+          _CityPassengerSection(ref: ref),
         ],
       ),
     );
@@ -192,30 +134,7 @@ class _WelcomeHeader extends StatelessWidget {
             ),
           ],
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceWhite,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.borderLight),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.calendar_today_rounded,
-                size: 16,
-                color: AppTheme.textSecondary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${now.day}/${now.month}/${now.year}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
-        ),
+        _DateFilterButton(),
       ],
     );
   }
@@ -226,54 +145,90 @@ class _WelcomeHeader extends StatelessWidget {
   }
 }
 
-// ==================== Quick Actions Bar ====================
-class _QuickActionsBar extends StatelessWidget {
-  final AsyncValue<DashboardStats> statsAsync;
-  final AsyncValue<List<SubscriptionEntity>> subscriptionsAsync;
+// ==================== Date Filter Button ====================
+class _DateFilterButton extends StatefulWidget {
+  @override
+  State<_DateFilterButton> createState() => _DateFilterButtonState();
+}
 
-  const _QuickActionsBar({
-    required this.statsAsync,
-    required this.subscriptionsAsync,
-  });
+class _DateFilterButtonState extends State<_DateFilterButton> {
+  DateTime _selectedDate = DateTime.now();
+  bool _isHovered = false;
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: AppTheme.primaryGreen,
+              surface: AppTheme.surfaceDark,
+              onSurface: AppTheme.textPrimary,
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: AppTheme.backgroundDark,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final pendingCount = subscriptionsAsync.maybeWhen(
-      data: (subs) =>
-          subs.where((s) => s.status == SubscriptionStatus.pending).length,
-      orElse: () => 0,
-    );
-
-    final todaysTrips = statsAsync.maybeWhen(
-      data: (stats) => stats.todaysTrips,
-      orElse: () => 0,
-    );
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        if (pendingCount > 0)
-          _QuickActionChip(
-            icon: Icons.pending_actions_rounded,
-            label: '$pendingCount اشتراكات معلقة',
-            color: AppTheme.accentOrange,
-            onTap: () => context.go('/subscriptions'),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: () => _selectDate(context),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                : AppTheme.surfaceDark,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _isHovered
+                  ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+                  : AppTheme.borderDark,
+            ),
           ),
-        if (todaysTrips > 0)
-          _QuickActionChip(
-            icon: Icons.directions_bus_rounded,
-            label: '$todaysTrips رحلات اليوم',
-            color: AppTheme.accentBlue,
-            onTap: () => context.go('/trips'),
+          child: Row(
+            children: [
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 16,
+                color: _isHovered
+                    ? AppTheme.primaryGreen
+                    : AppTheme.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: _isHovered
+                      ? AppTheme.primaryGreen
+                      : AppTheme.textPrimary,
+                ),
+              ),
+            ],
           ),
-        _QuickActionChip(
-          icon: Icons.payments_rounded,
-          label: 'المدفوعات',
-          color: AppTheme.primaryPurple,
-          onTap: () => context.go('/payments'),
         ),
-      ],
+      ),
     );
   }
 }
@@ -338,30 +293,6 @@ class _QuickActionChipState extends State<_QuickActionChip> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ==================== Section Header ====================
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final Widget? trailing;
-
-  const _SectionHeader({required this.title, this.trailing});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        if (trailing != null) trailing!,
-      ],
     );
   }
 }
@@ -488,94 +419,6 @@ class _PendingSubscriptionItem extends StatelessWidget {
   }
 }
 
-// ==================== Navigation Card ====================
-class _NavigationCard extends StatefulWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _NavigationCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  State<_NavigationCard> createState() => _NavigationCardState();
-}
-
-class _NavigationCardState extends State<_NavigationCard> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _isHovered
-                ? widget.color.withValues(alpha: 0.08)
-                : AppTheme.surfaceWhite,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _isHovered
-                  ? widget.color.withValues(alpha: 0.3)
-                  : AppTheme.borderLight,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: widget.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(widget.icon, color: widget.color, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: _isHovered ? widget.color : AppTheme.textSecondary,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ==================== Loading States ====================
 class _StatsLoading extends StatelessWidget {
   const _StatsLoading();
@@ -604,13 +447,92 @@ class _StatsLoading extends StatelessWidget {
   }
 }
 
-class _PendingActionsLoading extends StatelessWidget {
-  const _PendingActionsLoading();
+// ==================== City Passenger Section ====================
+class _CityPassengerSection extends StatelessWidget {
+  final WidgetRef ref;
+
+  const _CityPassengerSection({required this.ref});
 
   @override
   Widget build(BuildContext context) {
+    final citiesAsync = ref.watch(citiesProvider);
+    final stationsAsync = ref.watch(stationsProvider);
+    final bookingsAsync = ref.watch(bookingsProvider);
+    final universitiesAsync = ref.watch(universitiesProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 28),
+        // Refresh button only (no title)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              onPressed: () {
+                ref.invalidate(citiesProvider);
+                ref.invalidate(stationsProvider);
+                ref.invalidate(bookingsProvider);
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('تحديث'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        citiesAsync.when(
+          data: (cities) => stationsAsync.when(
+            data: (stations) => bookingsAsync.when(
+              data: (bookings) => universitiesAsync.when(
+                data: (universities) {
+                  // Get today's bookings
+                  final today = DateTime.now();
+                  final todaysBookings = bookings.where((b) {
+                    return b.bookingDate.year == today.year &&
+                        b.bookingDate.month == today.month &&
+                        b.bookingDate.day == today.day;
+                  }).toList();
+
+                  if (cities.isEmpty) {
+                    return _buildEmptyState(context, 'لا توجد مدن');
+                  }
+
+                  return Column(
+                    children: cities.map((city) {
+                      final cityStations = stations
+                          .where((s) => s.cityId == city.id)
+                          .toList();
+                      return _CityGroup(
+                        city: city,
+                        stations: cityStations,
+                        bookings: todaysBookings,
+                        universities: universities
+                            .where((u) => u.cityId == city.id)
+                            .toList(),
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => _buildLoadingState(),
+                error: (_, _) => _buildErrorState(context),
+              ),
+              loading: () => _buildLoadingState(),
+              error: (_, _) => _buildErrorState(context),
+            ),
+            loading: () => _buildLoadingState(),
+            error: (_, _) => _buildErrorState(context),
+          ),
+          loading: () => _buildLoadingState(),
+          error: (_, _) => _buildErrorState(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingState() {
     return Container(
-      height: 150,
+      height: 100,
       decoration: BoxDecoration(
         color: AppTheme.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
@@ -619,52 +541,91 @@ class _PendingActionsLoading extends StatelessWidget {
       child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
     );
   }
-}
 
-// ==================== Empty State ====================
-class _EmptyPendingState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, String message) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppTheme.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.borderLight),
       ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 48,
-            color: AppTheme.accentGreen,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'مفيش حاجة معلقة! 🎉',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'كل الاشتراكات تم التعامل معها',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
-          ),
-        ],
+      child: Center(
+        child: Text(
+          message,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: Center(
+        child: Text(
+          'حدث خطأ في تحميل البيانات',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.accentRed),
+        ),
       ),
     );
   }
 }
 
-// ==================== Error State ====================
-class _ErrorState extends StatelessWidget {
+// ==================== City Group (Expandable) ====================
+class _CityGroup extends StatefulWidget {
+  final CityEntity city;
+  final List<StationEntity> stations;
+  final List<BookingEntity> bookings;
+  final List<UniversityEntity> universities;
+
+  const _CityGroup({
+    required this.city,
+    required this.stations,
+    required this.bookings,
+    required this.universities,
+  });
+
+  @override
+  State<_CityGroup> createState() => _CityGroupState();
+}
+
+class _CityGroupState extends State<_CityGroup> {
+  bool _isExpanded = true;
+
   @override
   Widget build(BuildContext context) {
+    // Count bookings per station for this city
+    final stationBookingCounts = <String, int>{};
+    final deliveredCounts = <String, int>{};
+
+    for (final station in widget.stations) {
+      final stationBookings = widget.bookings.where(
+        (b) =>
+            b.pickupStationId == station.id || b.dropoffStationId == station.id,
+      );
+      stationBookingCounts[station.id] = stationBookings.length;
+      deliveredCounts[station.id] = stationBookings
+          .where((b) => b.status == BookingStatus.completed)
+          .length;
+    }
+
+    final totalPassengers = stationBookingCounts.values.fold(
+      0,
+      (a, b) => a + b,
+    );
+
     return Container(
-      padding: const EdgeInsets.all(32),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
@@ -672,13 +633,341 @@ class _ErrorState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppTheme.accentRed),
-          const SizedBox(height: 12),
-          Text(
-            'حدث خطأ في تحميل البيانات',
-            style: Theme.of(
+          // City Header (Clickable)
+          InkWell(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryPurple.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.vertical(
+                  top: const Radius.circular(12),
+                  bottom: _isExpanded ? Radius.zero : const Radius.circular(12),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Expand/Collapse Icon
+                  AnimatedRotation(
+                    turns: _isExpanded ? 0.25 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: AppTheme.primaryPurple,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // City Color Bar
+                  Container(
+                    width: 4,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryPurple,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // City Name
+                  Text(
+                    widget.city.displayName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryPurple,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // Badge with count
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryPurple,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$totalPassengers راكب',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Add button
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.add, size: 20),
+                    color: AppTheme.primaryPurple,
+                    tooltip: 'إضافة',
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Table Content (Expandable)
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 200),
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox.shrink(),
+            secondChild: _buildStationsTable(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+              stationBookingCounts,
+              deliveredCounts,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStationsTable(
+    BuildContext context,
+    Map<String, int> stationBookingCounts,
+    Map<String, int> deliveredCounts,
+  ) {
+    if (widget.stations.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Text(
+            'لا توجد محطات في هذه المدينة',
+            style: TextStyle(color: AppTheme.textSecondary),
+          ),
+        ),
+      );
+    }
+
+    // Create a map of university_id to university name for quick lookup
+    final universityMap = <String, String>{};
+    for (final uni in widget.universities) {
+      universityMap[uni.id] = uni.displayName;
+    }
+
+    return Column(
+      children: [
+        // Table Header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.backgroundLight,
+            border: Border(bottom: BorderSide(color: AppTheme.borderLight)),
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 32), // Checkbox space
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'المحطة',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'الجامعة',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Text(
+                  'عدد الركاب',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Text(
+                  'الحالة',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Table Rows
+        ...widget.stations.map((station) {
+          final passengerCount = stationBookingCounts[station.id] ?? 0;
+          final deliveredCount = deliveredCounts[station.id] ?? 0;
+          final isDelivered =
+              passengerCount > 0 && deliveredCount == passengerCount;
+
+          // Get university names for this city (all stations in a city share the same universities)
+          final cityUniversities = widget.universities
+              .where((u) => u.cityId == station.cityId)
+              .map((u) => u.displayName)
+              .toList();
+          final universityDisplay = cityUniversities.isNotEmpty
+              ? cityUniversities.join('، ')
+              : '-';
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: AppTheme.borderLight.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Checkbox
+                SizedBox(
+                  width: 32,
+                  child: Checkbox(
+                    value: isDelivered && passengerCount > 0,
+                    onChanged: passengerCount > 0 ? (_) {} : null,
+                    activeColor: AppTheme.accentGreen,
+                  ),
+                ),
+
+                // Station Name
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    station.displayName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+
+                // University Name
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    universityDisplay,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: cityUniversities.isNotEmpty
+                          ? AppTheme.textPrimary
+                          : AppTheme.textMuted,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                // Passenger Count
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    '$passengerCount راكب',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: passengerCount > 0
+                          ? AppTheme.textPrimary
+                          : AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+
+                // Delivery Status Badge
+                Expanded(
+                  flex: 1,
+                  child: _DeliveryStatusBadge(
+                    isDelivered: isDelivered,
+                    hasPassengers: passengerCount > 0,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+// ==================== Delivery Status Badge ====================
+class _DeliveryStatusBadge extends StatelessWidget {
+  final bool isDelivered;
+  final bool hasPassengers;
+
+  const _DeliveryStatusBadge({
+    required this.isDelivered,
+    required this.hasPassengers,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!hasPassengers) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppTheme.textSecondary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          'لا يوجد',
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+
+    final color = isDelivered ? AppTheme.accentGreen : AppTheme.accentOrange;
+    final text = isDelivered ? 'تم التوصيل' : 'في الطريق';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isDelivered ? Icons.check_circle : Icons.schedule,
+            size: 12,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

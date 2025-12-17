@@ -102,7 +102,7 @@ class _BookingsPageState extends ConsumerState<BookingsPage> {
           statsAsync.when(
             data: (stats) => _buildStatsCards(context, stats),
             loading: () => const SizedBox(height: 100),
-            error: (_, __) => const SizedBox(height: 100),
+            error: (_, _) => const SizedBox(height: 100),
           ),
 
           const SizedBox(height: 24),

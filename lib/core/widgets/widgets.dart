@@ -1,5 +1,6 @@
 /// Core widgets barrel file
 /// تصدير كل الـ widgets المشتركة من مكان واحد
+library;
 
 export 'dashboard_layout.dart';
 export 'stat_card.dart';

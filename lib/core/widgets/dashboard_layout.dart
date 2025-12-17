@@ -116,7 +116,6 @@ class _FifaSidebar extends StatelessWidget {
                     ],
                     currentLocation: currentLocation,
                   ),
-                  const SizedBox(height: 20),
                   _NavGroup(
                     title: 'العمليات',
                     items: [
@@ -138,7 +137,6 @@ class _FifaSidebar extends StatelessWidget {
                     ],
                     currentLocation: currentLocation,
                   ),
-                  const SizedBox(height: 20),
                   _NavGroup(
                     title: 'الإعدادات',
                     items: [
@@ -178,32 +176,19 @@ class _LogoSection extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          // Logo
-          Container(
+          // Logo - Plain image without background
+          Image.asset(
+            'assets/image/logo.png',
             width: 48,
             height: 48,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppTheme.primaryGreen, AppTheme.accentPurple],
-              ),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Image.asset(
-                'assets/image/logo.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.directions_bus_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  );
-                },
-              ),
-            ),
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(
+                Icons.directions_bus_rounded,
+                color: AppTheme.textPrimary,
+                size: 40,
+              );
+            },
           ),
           const SizedBox(width: 14),
           Column(
@@ -246,18 +231,6 @@ class _NavGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8, bottom: 10),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textMuted,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
         ...items.map(
           (item) => _NavButton(
             icon: item.icon,
@@ -472,33 +445,38 @@ class _FifaTopBar extends StatelessWidget {
 
           const Spacer(),
 
-          // Search Bar
+          // Search Bar - Clean design
           Container(
-            width: 280,
-            height: 44,
+            width: 240,
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: AppTheme.backgroundDark,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.borderDark.withValues(alpha: 0.5),
-              ),
+              color: AppTheme.surfaceDark,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.borderDark),
             ),
             child: Row(
               children: [
-                const SizedBox(width: 14),
-                Icon(Icons.search_rounded, color: AppTheme.textMuted, size: 20),
-                const SizedBox(width: 10),
+                Icon(Icons.search_rounded, color: AppTheme.textMuted, size: 18),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 13,
+                    ),
+                    decoration: const InputDecoration(
                       hintText: 'ابحث...',
                       hintStyle: TextStyle(
                         color: AppTheme.textMuted,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                       isDense: true,
+                      isCollapsed: true,
                     ),
                   ),
                 ),
@@ -515,31 +493,39 @@ class _FifaTopBar extends StatelessWidget {
 
           const SizedBox(width: 16),
 
-          // User Avatar with border
+          // User Avatar with border - Circular
           Container(
-            padding: const EdgeInsets.all(3),
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              shape: BoxShape.circle,
               border: Border.all(color: AppTheme.primaryGreen, width: 2),
             ),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppTheme.primaryGreen, AppTheme.accentPurple],
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Text(
-                  userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/image/IMG_0052.JPG',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.primaryGreen,
+                    ),
+                    child: Center(
+                      child: Text(
+                        userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

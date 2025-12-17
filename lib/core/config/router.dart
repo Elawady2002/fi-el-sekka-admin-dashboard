@@ -62,31 +62,38 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => const DashboardPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DashboardPage()),
           ),
           GoRoute(
             path: '/users',
-            builder: (context, state) => const UsersPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: UsersPage()),
           ),
           GoRoute(
             path: '/subscriptions',
-            builder: (context, state) => const SubscriptionsPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SubscriptionsPage()),
           ),
           GoRoute(
             path: '/trips',
-            builder: (context, state) => const TripsPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: TripsPage()),
           ),
           GoRoute(
             path: '/bookings',
-            builder: (context, state) => const BookingsPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: BookingsPage()),
           ),
           GoRoute(
             path: '/routes-locations',
-            builder: (context, state) => const RoutesLocationsPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: RoutesLocationsPage()),
           ),
           GoRoute(
             path: '/payments',
-            builder: (context, state) => const PaymentsPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: PaymentsPage()),
           ),
         ],
       ),

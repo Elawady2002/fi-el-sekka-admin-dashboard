@@ -68,18 +68,18 @@ class _CompactStatCardState extends State<_CompactStatCard> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _isHovered
-                ? widget.stat.color.withValues(alpha: 0.1)
+                ? AppTheme.primaryGreen.withValues(alpha: 0.08)
                 : AppTheme.surfaceDark,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: _isHovered
-                  ? widget.stat.color.withValues(alpha: 0.4)
+                  ? AppTheme.primaryGreen.withValues(alpha: 0.3)
                   : AppTheme.borderDark.withValues(alpha: 0.5),
             ),
             boxShadow: _isHovered
                 ? [
                     BoxShadow(
-                      color: widget.stat.color.withValues(alpha: 0.15),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -109,7 +109,7 @@ class _CompactStatCardState extends State<_CompactStatCard> {
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 14,
-                      color: widget.stat.color,
+                      color: AppTheme.primaryGreen,
                     ),
                 ],
               ),

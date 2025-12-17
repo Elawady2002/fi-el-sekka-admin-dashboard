@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Supabase-style Dark Theme Colors (Original)
-  static const Color primaryGreen = Color(0xFF3ECF8E); // Supabase Green
-  static const Color primaryGreenLight = Color(0xFF5DE4A5);
-  static const Color primaryGreenDark = Color(0xFF2EB47B);
+  // Fi El Sekka Brand Colors - Warm Gold (Easy on eyes)
+  static const Color primaryGreen = Color(0xFFDAAE5D); // Warm Gold
+  static const Color primaryGreenLight = Color(0xFFE6C07A);
+  static const Color primaryGreenDark = Color(0xFFC49A4B);
 
   // Dark Background Colors
   static const Color backgroundDark = Color(0xFF1C1C1C); // Main background
@@ -92,7 +92,7 @@ class AppTheme {
         foregroundColor: textPrimary,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           color: textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -167,91 +167,91 @@ class AppTheme {
       // Typography with PingAR font
       textTheme: const TextTheme(
         displayLarge: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
         displayMedium: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
         displaySmall: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
         headlineLarge: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         headlineMedium: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         headlineSmall: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleLarge: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleMedium: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         titleSmall: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         bodyLarge: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimary,
         ),
         bodyMedium: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textPrimary,
         ),
         bodySmall: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textSecondary,
         ),
         labelLarge: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
         labelMedium: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
         labelSmall: TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: textSecondary,
@@ -272,7 +272,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: primaryGreen.withValues(alpha: 0.15),
         labelStyle: const TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           color: primaryGreen,
           fontWeight: FontWeight.w500,
         ),
@@ -308,14 +308,11 @@ class AppTheme {
         }),
         dividerThickness: 1,
         headingTextStyle: const TextStyle(
-          fontFamily: 'PingAR',
+          fontFamily: 'Cairo',
           color: textPrimary,
           fontWeight: FontWeight.w600,
         ),
-        dataTextStyle: const TextStyle(
-          fontFamily: 'PingAR',
-          color: textPrimary,
-        ),
+        dataTextStyle: const TextStyle(fontFamily: 'Cairo', color: textPrimary),
       ),
     );
   }

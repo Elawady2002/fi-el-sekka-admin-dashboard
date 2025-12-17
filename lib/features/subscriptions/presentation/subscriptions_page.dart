@@ -661,7 +661,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
                   child: Image.network(
                     sub.paymentProofUrl!,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) =>
+                    errorBuilder: (_, _, _) =>
                         const Center(child: Text('تعذر تحميل الصورة')),
                   ),
                 ),
