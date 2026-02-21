@@ -1,174 +1,150 @@
 "use client";
 
-import { Users, CreditCard, BookOpen, Wallet, Calendar, RefreshCcw, ChevronRight, Plus, CheckCircle, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Users, CreditCard, BookOpen, Wallet, Calendar, RefreshCcw, ChevronRight, Plus, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardPage() {
-  const userName = "احمد رضا";
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [stats, setStats] = useState([
+    { label: "المستخدمين", value: "...", icon: Users, color: "#3B82F6", subLabel: "إجمالي المشتركين" },
+    { label: "المشتركين النشطين", value: "...", icon: CreditCard, color: "#3ECF8E", subLabel: "اشتراكات مفعلة" },
+    { label: "الحجوزات اليوم", value: "...", icon: BookOpen, color: "#DAAE5D", subLabel: "رحلات مؤكدة اليوم" },
+    { label: "المحفظة الإجمالية", value: "...", icon: Wallet, color: "#F59E0B", subLabel: "دينار كويتي" },
+  ]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { label: "المستخدمين", value: "1,248", icon: Users, color: "#3B82F6" },
-    { label: "المشتركين النشطين", value: "856", icon: CreditCard, color: "#3ECF8E" },
-    { label: "إجمالي الحجوزات", value: "12,450", icon: BookOpen, color: "#0EA5E9" },
-    { label: "الإيرادات الشهرية", value: "٤٢,٥٠٠ ج.م", icon: Wallet, color: "#DAAE5D" },
-  ];
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const [usersCount, activeSubs, bookingsToday, walletSum] = await Promise.all([
+          supabase.from('users').select('*', { count: 'exact', head: true }),
+          supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+          supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'confirmed'),
+          supabase.from('users').select('wallet_balance')
+        ]);
 
-  const pendingActions = [
-    { id: 1, name: "محمد علي", detail: "اشتراك شهري - ٤٥٠ ج.م", time: "منذ ١٥ دقيقة" },
-    { id: 2, name: "سارة محمود", detail: "اشتراك فصل دراسي - ١,٢٠٠ ج.م", time: "منذ ٤٥ دقيقة" },
-    { id: 3, name: "ياسين حسن", detail: "اشتراك شهري - ٤٥٠ ج.م", time: "منذ ٢ ساعة" },
-  ];
+        const totalWallet = walletSum.data?.reduce((acc, curr) => acc + (curr.wallet_balance || 0), 0) || 0;
+
+        setStats([
+          { label: "المستخدمين", value: usersCount.count?.toLocaleString() || "0", icon: Users, color: "#3B82F6", subLabel: "إجمالي المسجلين" },
+          { label: "المشتركين النشطين", value: activeSubs.count?.toLocaleString() || "0", icon: CreditCard, color: "#3ECF8E", subLabel: "اشتراكات مفعلة" },
+          { label: "حجوزات الرحلات", value: bookingsToday.count?.toLocaleString() || "0", icon: BookOpen, color: "#DAAE5D", subLabel: "رحلات مؤكدة" },
+          { label: "رصيد المحافظ", value: totalWallet.toLocaleString(), icon: Wallet, color: "#F59E0B", subLabel: "إجمالي أرصدة المستخدمين" },
+        ]);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-8 text-right bg-[#121212]/30 min-h-screen">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-border-dark/30">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-text-primary">
-            صباح الخير، {userName}! 👋
-          </h1>
-          <p className="text-sm text-text-secondary">
-            نظرة عامة على نظام في السكة
-          </p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">مرحباً بك، <span className="text-primary-green">أدمن</span> 👋</h1>
+          <p className="text-text-secondary text-sm">نظرة سريعة على أداء منصة "في السكة" اليوم</p>
         </div>
-
-        {/* Date Filter */}
-        <button className="flex items-center gap-2 px-3.5 py-2 bg-surface-dark border border-border-dark rounded-xl text-sm font-medium hover:border-primary-green/50 hover:bg-primary-green/5 transition-all text-text-secondary hover:text-primary-green">
-          <Calendar size={16} />
-          <span>{selectedDate.toLocaleDateString('ar-EG')}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="px-5 py-2.5 bg-surface-dark border border-border-dark rounded-2xl flex items-center gap-2.5 transition-all hover:border-primary-green/30">
+            <div className="w-2.5 h-2.5 rounded-full bg-accent-green animate-pulse" />
+            <span className="text-sm font-bold text-text-primary">النظام يعمل بكفاءة</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="group card p-4 flex flex-col gap-3.5 hover:border-primary-green/30 hover:bg-primary-green/4 transition-all cursor-pointer shadow-lg shadow-black/5">
-            <div className="flex items-center justify-between">
+          <div key={i} className="group card p-6 flex flex-col gap-4 hover:border-primary-green/30 hover:bg-primary-green/4 transition-all cursor-pointer shadow-2xl relative overflow-hidden border border-border-dark">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary-green/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary-green/10 transition-colors" />
+            <div className="flex items-center justify-between relative z-10">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: `${stat.color}1F` }}
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
+                style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
               >
-                <stat.icon size={20} style={{ color: stat.color }} />
+                <stat.icon size={26} />
               </div>
-              <ChevronRight size={14} className="text-primary-green opacity-0 group-hover:opacity-100 transition-opacity translate-x-1" />
+              <div className="flex flex-col items-end">
+                <p className="text-sm font-bold text-text-secondary">{stat.label}</p>
+                <h2 className="text-2xl font-black text-white mt-1">{loading ? <Loader2 className="animate-spin text-text-muted" size={20} /> : stat.value}</h2>
+              </div>
             </div>
-            <div className="space-y-0.5">
-              <div className="text-xl font-bold text-text-primary">{stat.value}</div>
-              <div className="text-[11px] text-text-secondary">{stat.label}</div>
+            <div className="pt-4 border-t border-border-dark/30 flex items-center justify-between relative z-10">
+              <span className="text-[10px] text-text-muted">{stat.subLabel}</span>
+              <div className="flex items-center gap-1 text-accent-green text-[10px] font-bold">
+                <span>+12.5%</span>
+                <RefreshCcw size={10} />
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Pending Actions Section */}
-      <div className="space-y-4">
-        <div className="card">
-          {pendingActions.map((action, i) => (
-            <div key={action.id} className={cn(
-              "flex items-center gap-4 p-4 hover:bg-white/2 transition-colors",
-              i !== pendingActions.length - 1 && "border-b border-border-dark"
-            )}>
-              <div className="w-11 h-11 rounded-xl bg-accent-orange/10 flex items-center justify-center text-accent-orange">
-                <CreditCard size={22} />
+      {/* Main Content Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Quick Actions */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="card p-6 flex flex-col justify-between space-y-6 border border-border-dark bg-linear-to-br from-surface-dark to-surface-dark/50">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-primary-green/10 flex items-center justify-center text-primary-green">
+                <Plus size={24} />
               </div>
-
-              <div className="flex-1 flex flex-col gap-0.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">{action.name}</span>
-                  <span className="text-[10px] text-text-secondary">{action.time}</span>
-                </div>
-                <span className="text-xs text-text-secondary">{action.detail}</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button className="w-9 h-9 rounded-lg bg-accent-green/10 text-accent-green flex items-center justify-center hover:bg-accent-green hover:text-white transition-all">
-                  <CheckCircle size={18} />
-                </button>
-                <button className="w-9 h-9 rounded-lg bg-accent-red/10 text-accent-red flex items-center justify-center hover:bg-accent-red hover:text-white transition-all">
-                  <XCircle size={18} />
-                </button>
-              </div>
+              <h3 className="text-xl font-bold text-white">إضافة رحلة جديدة</h3>
+              <p className="text-sm text-text-secondary leading-relaxed">قم بجدولة رحلة جديدة اليوم واختيار السائق والمسار المناسب.</p>
             </div>
-          ))}
-        </div>
-      </div>
+            <button className="btn-primary w-full py-3 text-sm font-bold shadow-lg shadow-primary-green/10">
+              <span>بدء الجدولة</span>
+              <ChevronRight size={18} className="rotate-180" />
+            </button>
+          </div>
 
-      {/* City Passenger Section */}
-      <div className="space-y-4 pt-4">
-        <div className="flex items-center justify-between">
-          <div />
-          <button className="flex items-center gap-1 text-sm text-primary-green hover:underline">
-            <RefreshCcw size={14} />
-            <span>تحديث</span>
+          <div className="card p-6 flex flex-col justify-between space-y-6 border border-border-dark">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-accent-blue/10 flex items-center justify-center text-accent-blue">
+                <CheckCircle size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-white">طلبات الاشتراكات</h3>
+              <p className="text-sm text-text-secondary leading-relaxed">لديك طلبات اشتراك جديدة تحتاج للمراجعة والتحقق من الدفع.</p>
+            </div>
+            <button className="flex items-center justify-center gap-2 w-full py-3 h-11 bg-white/3 border border-border-dark rounded-xl text-white text-sm font-bold hover:bg-white/8 transition-all">
+              <span>عرض الطلبات</span>
+              <ChevronRight size={18} className="rotate-180" />
+            </button>
+          </div>
+        </div>
+
+        {/* System Logs / Activity */}
+        <div className="card p-6 border border-border-dark bg-surface-dark">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-extrabold text-white">آخر التنشطة</h3>
+            <span className="text-[10px] text-primary-green font-bold px-2 py-1 bg-primary-green/10 rounded-lg">مباشر</span>
+          </div>
+          <div className="space-y-6">
+            {[
+              { type: 'sub', desc: 'تم تفعيل اشتراك جديد لـ "أحمد محمد"', time: 'منذ ٥ دقائق', color: 'accent-green' },
+              { type: 'booking', desc: 'تم حجز مقعد في رحلة الإسماعيلية', time: 'منذ ١٢ دقيقة', color: 'primary-green' },
+              { type: 'wallet', desc: 'شحن رصيد محفظة بقيمة ٥٠٠ ج.م', time: 'منذ ٣٠ دقيقة', color: 'accent-purple' },
+              { type: 'alert', desc: 'تنبيه: رحلة تأخرت عن موعدها', time: 'منذ ساعة', color: 'accent-red' },
+            ].map((item, i) => (
+              <div key={i} className="flex gap-4 items-start group cursor-pointer">
+                <div className={cn("w-1.5 h-10 rounded-full mt-1 group-hover:w-2 transition-all shrink-0", `bg-${item.color}`)} />
+                <div className="space-y-1">
+                  <p className="text-xs text-text-primary font-medium leading-tight group-hover:text-primary-green transition-colors">{item.desc}</p>
+                  <span className="text-[10px] text-text-muted">{item.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button className="w-full mt-8 py-2.5 text-[10px] font-bold text-text-muted hover:text-white transition-colors border-t border-border-dark pt-4">
+            عرض كافة السجلات
           </button>
         </div>
-
-        <CityGroup
-          name="المنصورة"
-          count={145}
-          stations={[
-            { name: "محطة الجامعة", uni: "جامعة المنصورة", passengers: 85 },
-            { name: "محطة الجيش", uni: "جامعة حورس", passengers: 60 }
-          ]}
-        />
-
-        <CityGroup
-          name="دمياط"
-          count={92}
-          stations={[
-            { name: "ميدان الساعة", uni: "جامعة دمياط", passengers: 92 }
-          ]}
-        />
       </div>
-    </div>
-  );
-}
-
-function CityGroup({ name, count, stations }: any) {
-  const [expanded, setExpanded] = useState(true);
-
-  return (
-    <div className="card">
-      <div
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-3 p-4 bg-primary-green/8 cursor-pointer"
-      >
-        <ChevronRight size={24} className={cn("text-primary-green transition-transform", expanded && "rotate-90")} />
-        <div className="w-1 h-6 bg-primary-green rounded-full" />
-        <span className="text-base font-bold text-primary-green">{name}</span>
-        <div className="px-2.5 py-1 bg-primary-green text-black text-[11px] font-bold rounded-full">
-          {count} راكب
-        </div>
-        <div className="flex-1" />
-        <button className="w-8 h-8 flex items-center justify-center text-primary-green hover:bg-primary-green/10 rounded-full">
-          <Plus size={20} />
-        </button>
-      </div>
-
-      {expanded && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-[#1a1a1a] text-text-secondary border-b border-border-dark">
-              <tr>
-                <th className="p-4 font-semibold text-xs">المحطة</th>
-                <th className="p-4 font-semibold text-xs">الجامعة</th>
-                <th className="p-4 font-semibold text-xs">عدد الركاب</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stations.map((station: any, i: number) => (
-                <tr key={i} className="border-b border-border-dark last:border-0 hover:bg-white/1">
-                  <td className="p-4 font-medium">{station.name}</td>
-                  <td className="p-4 text-text-secondary">{station.uni}</td>
-                  <td className="p-4 font-bold text-primary-green">{station.passengers}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 }

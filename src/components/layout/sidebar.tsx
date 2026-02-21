@@ -17,25 +17,47 @@ import { cn } from "@/lib/utils";
 
 const navGroups = [
     {
-        title: "عام",
+        title: "نظرة عامة",
         items: [
             { label: "الرئيسية", href: "/", icon: LayoutDashboard },
-            { label: "المستخدمين", href: "/users", icon: Users },
         ],
     },
     {
-        title: "العمليات",
+        title: "العمليات (Operational)",
         items: [
-            { label: "الاشتراكات", href: "/subscriptions", icon: CreditCard },
-            { label: "الرحلات", href: "/trips", icon: Bus },
-            { label: "الحجوزات", href: "/bookings", icon: CalendarCheck },
+            { label: "المدن والمحطات", href: "/trips/cities", icon: MapPin },
+            { label: "المسارات والخطوط", href: "/trips/routes", icon: Bus },
+            { label: "خطوط الجامعات", href: "/trips/university-lines", icon: CalendarCheck },
         ],
     },
     {
-        title: "الإعدادات",
+        title: "النشاط (Activity)",
         items: [
-            { label: "المواقع والمسارات", href: "/routes-locations", icon: MapPin },
-            { label: "المدفوعات", href: "/payments", icon: PaymentIcon },
+            { label: "الحجوزات", href: "/bookings/overview", icon: CalendarCheck },
+            { label: "طلبات الجامعات", href: "/bookings/university-requests", icon: Users },
+        ],
+    },
+    {
+        title: "المالية (Financial)",
+        items: [
+            { label: "باقات الاشتراك", href: "/finance/subscription-plans", icon: CreditCard },
+            { label: "موافقة الاشتراكات", href: "/finance/subscriptions-approval", icon: CreditCard },
+            { label: "شحن المحفظة", href: "/finance/wallet-topups", icon: PaymentIcon },
+        ],
+    },
+    {
+        title: "الإدارة (Management)",
+        items: [
+            { label: "سجلات المستخدمين", href: "/management/users", icon: Users },
+            { label: "سجل العمليات", href: "/management/transactions", icon: PaymentIcon },
+        ],
+    },
+    {
+        title: "المحتوى (CMS)",
+        items: [
+            { label: "مركز المساعدة (FAQ)", href: "/cms/faq", icon: LayoutDashboard },
+            { label: "الصفحات الثابتة", href: "/cms/pages", icon: LayoutDashboard },
+            { label: "بيانات التواصل", href: "/cms/contact", icon: MapPin },
         ],
     },
 ];
