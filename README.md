@@ -1,82 +1,58 @@
-# Fi El Sekka Admin Dashboard
+# Fi El Sekka Admin Dashboard (Next.js Version)
 
-Admin dashboard for Fi El Sekka transportation application built with Flutter Web.
+Professional admin dashboard for Fi El Sekka transportation application built with Next.js, Tailwind CSS, and Supabase.
 
 ## Features
 
-- ✅ Admin Authentication (Supabase)
-- ✅ Material Design 3 Theme
+- ✅ Modern Dashboard Overview
+- ✅ Swiss Clean Design System
 - ✅ Responsive Layout
-- ✅ GoRouter Navigation
-- 🚧 Dashboard Home (Coming Soon)
-- 🚧 Users Management (Coming Soon)
-- 🚧 Subscriptions Management (Coming Soon)
-- 🚧 Trips & Schedules (Coming Soon)
+- ✅ Lucide React Icons
+- ✅ Supabase Integration (Auth & Database)
+- ✅ Zero Radius Geometric Aesthetic
 
 ## Tech Stack
 
-- **Framework**: Flutter Web
+- **Framework**: Next.js 14/15 (App Router)
+- **Styling**: Tailwind CSS 4
 - **Backend**: Supabase
-- **State Management**: Riverpod
-- **Routing**: GoRouter
-- **UI**: Material Design 3 + FlexColorScheme
-- **Charts**: fl_chart
-- **Tables**: data_table_2
+- **Icons**: Lucide React
+- **Animations**: Framer Motion
+- **Fonts**: Space Grotesk (Display), Inter (Body)
 
 ## Setup
 
-1. Clone the repository:
+1. Install dependencies:
 ```bash
-git clone <repository-url>
-cd dashboard_fi_el_sekka
+npm install
 ```
 
-2. Install dependencies:
+2. Create `.env.local` file (already created with your credentials):
 ```bash
-flutter pub get
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-3. Create `.env` file:
+3. Run the development server:
 ```bash
-cp .env.example .env
-```
-
-4. Update `.env` with your Supabase credentials:
-```
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_anon_key
-```
-
-5. Run the app:
-```bash
-flutter run -d chrome
+npm run dev
 ```
 
 ## Project Structure
 
 ```
-lib/
-├── core/
-│   ├── config/          # Supabase & Router config
-│   ├── theme/           # App theme
-│   └── widgets/         # Shared widgets
-├── features/
-│   ├── auth/            # Authentication
-│   ├── dashboard/       # Dashboard home
-│   ├── users/           # Users management
-│   ├── subscriptions/   # Subscriptions
-│   └── trips/           # Trips & schedules
-└── main.dart
+src/
+├── app/             # Next.js App Router pages
+├── components/      # UI Components
+│   └── layout/      # Sidebar and Layout components
+├── lib/             # Utilities and Supabase client
+│   ├── supabase.ts
+│   └── utils.ts
+└── globals.css      # Design system and tailwind styles
 ```
 
-## Admin Login
-
-Create an admin user in Supabase:
-
-1. Go to Authentication → Users → Add User
-2. Set `user_type` to `'admin'` in the `users` table
-3. Login with the credentials
+## Original Flutter Project
+The original Flutter Web project has been moved to `flutter_backup/` for reference.
 
 ## License
-
 Private project - All rights reserved
