@@ -34,7 +34,10 @@ export const db = {
 
     async deleteCity(id: string) {
         const { error } = await supabase.from('cities').delete().eq('id', id);
-        if (error) throw error;
+        if (error) {
+            console.error("deleteCity error:", error);
+            throw error;
+        }
     },
 
     async addStation(station: Partial<Station>) {
@@ -51,7 +54,10 @@ export const db = {
 
     async deleteStation(id: string) {
         const { error } = await supabase.from('stations').delete().eq('id', id);
-        if (error) throw error;
+        if (error) {
+            console.error("deleteStation error:", error);
+            throw error;
+        }
     },
 
     // Routes & Universities

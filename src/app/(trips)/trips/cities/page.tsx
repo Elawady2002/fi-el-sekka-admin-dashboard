@@ -50,7 +50,6 @@ export default function CitiesPage() {
     };
 
     const handleDeleteCity = async (id: string) => {
-        if (!confirm("هل أنت متأكد من حذف هذه المدينة؟ سيتم حذف جميع المحطات التابعة لها أيضاً.")) return;
         try {
             await db.deleteCity(id);
             setCities(prev => prev.filter(c => c.id !== id));
@@ -60,7 +59,6 @@ export default function CitiesPage() {
     };
 
     const handleDeleteStation = async (id: string) => {
-        if (!confirm("هل أنت متأكد من حذف هذه المحطة؟")) return;
         try {
             await db.deleteStation(id);
             setStations(prev => prev.filter(s => s.id !== id));
