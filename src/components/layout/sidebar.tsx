@@ -4,14 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
-    Users,
-    CreditCard,
     Bus,
-    CalendarCheck,
-    MapPin,
-    CreditCard as PaymentIcon,
-    LogOut,
-    ChevronRight
+    LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,44 +15,7 @@ const navGroups = [
         items: [
             { label: "الرئيسية", href: "/", icon: LayoutDashboard },
         ],
-    },
-    {
-        title: "العمليات (Operational)",
-        items: [
-            { label: "من موقف لموقف", href: "/trips/cities", icon: MapPin },
-            { label: "خطوط الجامعات", href: "/trips/university-lines", icon: Bus },
-        ],
-    },
-    {
-        title: "النشاط (Activity)",
-        items: [
-            { label: "الحجوزات", href: "/bookings/overview", icon: CalendarCheck },
-            { label: "طلبات الجامعات", href: "/bookings/university-requests", icon: Users },
-        ],
-    },
-    {
-        title: "المالية (Financial)",
-        items: [
-            { label: "باقات الاشتراك", href: "/finance/subscription-plans", icon: CreditCard },
-            { label: "موافقة الاشتراكات", href: "/finance/subscriptions-approval", icon: CreditCard },
-            { label: "شحن المحفظة", href: "/finance/wallet-topups", icon: PaymentIcon },
-        ],
-    },
-    {
-        title: "الإدارة (Management)",
-        items: [
-            { label: "سجلات المستخدمين", href: "/management/users", icon: Users },
-            { label: "سجل العمليات", href: "/management/transactions", icon: PaymentIcon },
-        ],
-    },
-    {
-        title: "المحتوى (CMS)",
-        items: [
-            { label: "مركز المساعدة (FAQ)", href: "/cms/faq", icon: LayoutDashboard },
-            { label: "الصفحات الثابتة", href: "/cms/pages", icon: LayoutDashboard },
-            { label: "بيانات التواصل", href: "/cms/contact", icon: MapPin },
-        ],
-    },
+    }
 ];
 
 export function Sidebar() {
@@ -69,7 +26,6 @@ export function Sidebar() {
             {/* Logo Section */}
             <div className="p-5 flex items-center gap-3.5 border-b border-border-dark/50">
                 <div className="w-12 h-12 flex items-center justify-center text-text-primary">
-                    {/* Replace with actual logo if available */}
                     <Bus size={40} className="text-primary-green" />
                 </div>
                 <div className="flex flex-col">
@@ -82,7 +38,6 @@ export function Sidebar() {
             <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
                 {navGroups.map((group) => (
                     <div key={group.title} className="space-y-1.5 text-right">
-                        {/* Group Label removed in Flutter code as children mapping was direct, but FIFA style often has titles */}
                         {group.items.map((item) => {
                             const isActive = pathname === item.href;
                             return (
