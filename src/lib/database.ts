@@ -13,7 +13,10 @@ export const db = {
 
     async getStations() {
         const { data, error } = await supabase.from('stations').select('*, cities(*)').order('name_ar');
-        if (error) throw error;
+        if (error) {
+            console.error("getStations error:", error);
+            throw error;
+        }
         return data as Station[];
     },
 
@@ -54,7 +57,10 @@ export const db = {
     // Routes & Universities
     async getRoutes() {
         const { data, error } = await supabase.from('routes').select('*, universities(*)').order('route_name_ar');
-        if (error) throw error;
+        if (error) {
+            console.error("getRoutes error:", error);
+            throw error;
+        }
         return data as Route[];
     },
 
@@ -130,6 +136,36 @@ export const db = {
             .order('created_at', { ascending: false });
         if (error) throw error;
         return data as Booking[];
+    },
+
+    // Trips (Schedules)
+    async getTrips() {
+        const { data, error } = await supabase
+            .from('schedules')
+            .select('*, routes(*, universities(*))')
+            .order('trip_date', { ascending: false });
+        if (error) {
+            console.error("getTrips error:", error);
+            throw error;
+        }
+        return data as Trip[];
+    },
+
+    async addTrip(trip: Partial<Trip>) {
+        const { data, error } = await supabase.from('schedules').insert([trip]).select();
+        if (error) throw error;
+        return data[0] as Trip;
+    },
+
+    async updateTrip(id: string, trip: Partial<Trip>) {
+        const { data, error } = await supabase.from('schedules').update(trip).eq('id', id).select();
+        if (error) throw error;
+        return data[0] as Trip;
+    },
+
+    async deleteTrip(id: string) {
+        const { error } = await supabase.from('schedules').delete().eq('id', id);
+        if (error) throw error;
     },
 
     // CMS

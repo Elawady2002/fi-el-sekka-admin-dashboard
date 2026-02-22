@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, MapPin, Search, MoreVertical, Edit2, Trash2, ChevronDown, ChevronUp, Loader2, X, AlertCircle } from "lucide-react";
+import { Plus, MapPin, Search, Edit2, Trash2, ChevronDown, ChevronUp, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/database";
 import { City, Station, StationType } from "@/types/database";
@@ -10,7 +10,6 @@ export default function CitiesPage() {
     const [cities, setCities] = useState<City[]>([]);
     const [stations, setStations] = useState<Station[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [expandedCity, setExpandedCity] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -30,7 +29,6 @@ export default function CitiesPage() {
             console.error("Error fetching data:", error);
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     }
 
@@ -175,6 +173,18 @@ export default function CitiesPage() {
                                                         {station.station_type === 'pickup' ? 'صعود' :
                                                             station.station_type === 'dropoff' ? 'نزول' : 'صعود ونزول'}
                                                     </p>
+                                                    {station.destination_ids && station.destination_ids.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {station.destination_ids.map(id => {
+                                                                const dest = stations.find(s => s.id === id);
+                                                                return dest ? (
+                                                                    <span key={id} className="text-[9px] bg-white/5 text-text-muted px-1.5 py-0.5 rounded border border-border-dark">
+                                                                        وصل: {dest.name_ar}
+                                                                    </span>
+                                                                ) : null;
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -224,7 +234,7 @@ export default function CitiesPage() {
                                     await db.updateCity(cityModal.city.id, { name_ar, name_en });
                                 } else {
                                     const newCity = await db.addCity({ name_ar, name_en, is_active: true });
-                                    setExpandedCity(newCity.id); // Auto-expand new city
+                                    setExpandedCity(newCity.id);
                                 }
                                 setCityModal({ open: false });
                                 await fetchData();
@@ -247,7 +257,7 @@ export default function CitiesPage() {
             {/* Station Modal */}
             {stationModal.open && (
                 <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-surface-dark border border-border-dark rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl text-right">
+                    <div className="card-no-hover w-full max-w-md p-6 space-y-6 shadow-2xl text-right animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center justify-between">
                             <button onClick={() => setStationModal({ open: false })} className="text-text-muted hover:text-white">
                                 <X size={20} />
@@ -261,17 +271,24 @@ export default function CitiesPage() {
                             const name_ar = formData.get('name_ar') as string;
                             const name_en = formData.get('name_en') as string;
                             const station_type = formData.get('station_type') as StationType;
+                            const destination_ids = formData.getAll('destination_ids') as string[];
 
                             try {
                                 if (stationModal.station) {
-                                    await db.updateStation(stationModal.station.id, { name_ar, name_en, station_type });
+                                    await db.updateStation(stationModal.station.id, {
+                                        name_ar,
+                                        name_en,
+                                        station_type,
+                                        destination_ids
+                                    });
                                 } else {
                                     await db.addStation({
                                         name_ar,
                                         name_en,
                                         station_type,
                                         city_id: stationModal.cityId,
-                                        is_active: true
+                                        is_active: true,
+                                        destination_ids
                                     });
                                 }
                                 setStationModal({ open: false });
@@ -286,13 +303,14 @@ export default function CitiesPage() {
                                 <label className="text-xs text-text-secondary italic">Station Name (English)</label>
                                 <input name="name_en" required defaultValue={stationModal.station?.name_en} className="w-full bg-white/5 border border-border-dark rounded-xl py-2 px-4 text-left outline-none focus:border-primary-green font-mono" placeholder="Ex: Gate 1" />
                             </div>
-                            <div className="space-y-1.5">
+
+                            <div className="space-y-2">
                                 <label className="text-xs text-text-secondary">نوع المحطة (صعود/نزول)</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {['pickup', 'dropoff', 'both'].map((type) => (
                                         <label key={type} className={cn(
                                             "flex flex-col items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all",
-                                            stationModal.station?.station_type === type ? "border-primary-green bg-primary-green/10" : "border-border-dark hover:bg-white/5"
+                                            (stationModal.station?.station_type === type || (!stationModal.station && type === 'pickup')) ? "border-primary-green bg-primary-green/10" : "border-border-dark hover:bg-white/5"
                                         )}>
                                             <input type="radio" name="station_type" value={type} defaultChecked={stationModal.station?.station_type === type || (type === 'pickup' && !stationModal.station)} className="hidden" />
                                             <div className={cn(
@@ -306,6 +324,37 @@ export default function CitiesPage() {
                                     ))}
                                 </div>
                             </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs text-text-secondary">محطات الوصول (المستهدفة)</label>
+                                <div className="max-h-48 overflow-y-auto border border-border-dark rounded-xl bg-white/5 p-2 space-y-1 scrollbar-thin">
+                                    {cities.map(c => {
+                                        const cityStations = stations.filter(s => s.city_id === c.id && s.id !== stationModal.station?.id);
+                                        if (cityStations.length === 0) return null;
+                                        return (
+                                            <div key={c.id} className="space-y-1 pb-1 mb-1 border-b border-white/5 last:border-0">
+                                                <p className="text-[10px] font-bold text-primary-green px-1">{c.name_ar}</p>
+                                                <div className="grid grid-cols-2 gap-1 px-1">
+                                                    {cityStations.map(s => (
+                                                        <label key={s.id} className="flex items-center gap-2 p-1.5 hover:bg-white/5 rounded cursor-pointer transition-colors">
+                                                            <input
+                                                                type="checkbox"
+                                                                name="destination_ids"
+                                                                value={s.id}
+                                                                defaultChecked={stationModal.station?.destination_ids?.includes(s.id)}
+                                                                className="w-3 h-3 accent-primary-green"
+                                                            />
+                                                            <span className="text-[11px] text-text-primary truncate">{s.name_ar}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-[9px] text-text-muted italic">اختر المحطات التي يمكن الوصول إليها من هذه المحطة</p>
+                            </div>
+
                             <button className="btn-primary w-full py-3 mt-4">حفظ المحطة</button>
                         </form>
                     </div>

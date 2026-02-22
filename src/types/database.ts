@@ -20,6 +20,7 @@ export interface Station {
     location: any;
     station_type: StationType;
     is_active: boolean;
+    destination_ids?: string[]; // Array of reachable station IDs
     cities?: City; // For joins
 }
 
@@ -43,14 +44,27 @@ export interface Route {
 
 export interface Trip {
     id: string;
-    route_id: string;
+    route_id: string | null;
     driver_id: string | null;
     trip_date: string;
     departure_time: string | null;
     return_time: string | null;
     available_seats: number;
+    seat_price: number;
+    minibus_price: number;
+    car_type: string | null;
+    is_women_only: boolean;
+    trip_direction: string | null;
+    trip_type: 'city_to_city' | 'university';
     status: TripStatus;
     created_at: string;
+    routes?: Route; // For joins
+    stops_data?: Array<{
+        station_id: string;
+        arrival_time: string | null;
+        seat_price: number;
+        minibus_price: number;
+    }>;
 }
 
 export interface User {
