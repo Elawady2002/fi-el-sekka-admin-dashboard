@@ -68,7 +68,7 @@ export default function BookingOverviewPage() {
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                     <input
                         type="text"
-                        placeholder="بحث باسم العميل أو المحطة..."
+                        placeholder="بحث باسم العميل أو النقطة..."
                         className="w-full bg-surface-dark border border-border-dark rounded-xl py-2.5 pr-10 pl-4 text-right text-sm focus:border-primary-green transition-colors outline-none"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}

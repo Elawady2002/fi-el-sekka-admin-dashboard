@@ -90,7 +90,7 @@ export default function CitiesPage() {
                     className="btn-primary"
                 >
                     <Plus size={18} />
-                    <span>إضافة مدينة جديدة</span>
+                    <span>إضافة منطقة جديدة</span>
                 </button>
             </div>
 
@@ -99,7 +99,7 @@ export default function CitiesPage() {
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                 <input
                     type="text"
-                    placeholder="بحث عن مدينة أو محطة..."
+                    placeholder="بحث عن منطقة أو نقطة..."
                     className="w-full bg-surface-dark border border-border-dark rounded-xl py-2.5 pr-10 pl-4 text-right text-sm focus:border-primary-green transition-colors outline-none"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -123,7 +123,7 @@ export default function CitiesPage() {
                                 </div>
                                 <div className="text-right">
                                     <h3 className="font-bold text-text-primary">{city.name_ar}</h3>
-                                    <p className="text-xs text-text-secondary">{getCityStations(city.id).length} محطات</p>
+                                    <p className="text-xs text-text-secondary">{getCityStations(city.id).length} نقطة توقف</p>
                                 </div>
                             </div>
 
@@ -149,13 +149,13 @@ export default function CitiesPage() {
                         {expandedCity === city.id && (
                             <div className="border-t border-border-dark bg-[#1a1a1a]/50">
                                 <div className="p-4 flex items-center justify-between border-b border-border-dark">
-                                    <h4 className="text-sm font-bold text-text-primary">قائمة المحطات</h4>
+                                    <h4 className="text-sm font-bold text-text-primary">قائمة النقاط</h4>
                                     <button
                                         onClick={() => setStationModal({ open: true, cityId: city.id })}
                                         className="text-xs text-primary-green hover:underline flex items-center gap-1 font-bold"
                                     >
                                         <Plus size={14} />
-                                        <span>إضافة محطة</span>
+                                        <span>إضافة نقطة</span>
                                     </button>
                                 </div>
                                 <div className="divide-y divide-border-dark">
@@ -179,7 +179,7 @@ export default function CitiesPage() {
                                                                 const dest = stations.find(s => s.id === id);
                                                                 return dest ? (
                                                                     <span key={id} className="text-[9px] bg-white/5 text-text-muted px-1.5 py-0.5 rounded border border-border-dark">
-                                                                        وصل: {dest.name_ar}
+                                                                        إلى: {dest.name_ar}
                                                                     </span>
                                                                 ) : null;
                                                             })}
@@ -204,7 +204,7 @@ export default function CitiesPage() {
                                         </div>
                                     ))}
                                     {getCityStations(city.id).length === 0 && (
-                                        <p className="p-4 text-xs text-text-muted text-center italic">لا توجد محطات مضافة لهذه المدينة بعد.</p>
+                                        <p className="p-4 text-xs text-text-muted text-center italic">لا توجد نقاط مضافة لهذه المنطقة بعد.</p>
                                     )}
                                 </div>
                             </div>
@@ -221,7 +221,7 @@ export default function CitiesPage() {
                             <button onClick={() => setCityModal({ open: false })} className="text-text-muted hover:text-white">
                                 <X size={20} />
                             </button>
-                            <h2 className="text-xl font-bold text-white">{cityModal.city ? 'تعديل مدينة' : 'إضافة مدينة جديدة'}</h2>
+                            <h2 className="text-xl font-bold text-white">{cityModal.city ? 'تعديل منطقة' : 'إضافة منطقة جديدة'}</h2>
                         </div>
 
                         <form className="space-y-4" onSubmit={async (e) => {
@@ -262,7 +262,7 @@ export default function CitiesPage() {
                             <button onClick={() => setStationModal({ open: false })} className="text-text-muted hover:text-white">
                                 <X size={20} />
                             </button>
-                            <h2 className="text-xl font-bold text-white">{stationModal.station ? 'تعديل محطة' : 'إضافة محطة جديدة'}</h2>
+                            <h2 className="text-xl font-bold text-white">{stationModal.station ? 'تعديل نقطة' : 'إضافة نقطة جديدة'}</h2>
                         </div>
 
                         <form className="space-y-4" onSubmit={async (e) => {
@@ -296,16 +296,16 @@ export default function CitiesPage() {
                             } catch (err) { alert("حدث خطأ"); }
                         }}>
                             <div className="space-y-1.5">
-                                <label className="text-xs text-text-secondary">اسم المحطة بالعربية</label>
+                                <label className="text-xs text-text-secondary">اسم النقطة بالعربية</label>
                                 <input name="name_ar" required defaultValue={stationModal.station?.name_ar} className="w-full bg-white/5 border border-border-dark rounded-xl py-2 px-4 text-right outline-none focus:border-primary-green" placeholder="مثال: بوابه 1" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs text-text-secondary italic">Station Name (English)</label>
+                                <label className="text-xs text-text-secondary italic">Point Name (English)</label>
                                 <input name="name_en" required defaultValue={stationModal.station?.name_en} className="w-full bg-white/5 border border-border-dark rounded-xl py-2 px-4 text-left outline-none focus:border-primary-green font-mono" placeholder="Ex: Gate 1" />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs text-text-secondary">نوع المحطة (صعود/نزول)</label>
+                                <label className="text-xs text-text-secondary">نوع النقطة (صعود/نزول)</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {['pickup', 'dropoff', 'both'].map((type) => (
                                         <label key={type} className={cn(
@@ -326,7 +326,7 @@ export default function CitiesPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-xs font-bold text-text-secondary pr-1 border-r-2 border-primary-green">محطات الوصول (المستهدفة)</label>
+                                <label className="text-xs font-bold text-text-secondary pr-1 border-r-2 border-primary-green">نقاط الوصول (المواقف المستهدفة)</label>
                                 <div className="max-h-60 overflow-y-auto border border-border-dark rounded-2xl bg-black/20 p-3 space-y-4 scrollbar-thin">
                                     {cities.map(c => {
                                         const cityStations = stations.filter(s => s.city_id === c.id && s.id !== stationModal.station?.id);
@@ -357,10 +357,10 @@ export default function CitiesPage() {
                                         );
                                     })}
                                 </div>
-                                <p className="text-[10px] text-text-muted italic px-1">الرجاء تحديد المحطات التي يمكن للمسافر التوجه إليها من هذه المحطة.</p>
+                                <p className="text-[10px] text-text-muted italic px-1">الرجاء تحديد المواقف التي يمكن التحرك إليها من هذه النقطة.</p>
                             </div>
 
-                            <button className="btn-primary w-full py-3 mt-4">حفظ المحطة</button>
+                            <button className="btn-primary w-full py-3 mt-4">حفظ البيانات</button>
                         </form>
                     </div>
                 </div>
