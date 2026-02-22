@@ -25,7 +25,7 @@ const navGroups = [
     {
         title: "العمليات (Operational)",
         items: [
-            { label: "المدن والمحطات", href: "/trips/cities", icon: MapPin },
+            { label: "من موقف لموقف", href: "/trips/cities", icon: MapPin },
             { label: "خطوط الجامعات", href: "/trips/university-lines", icon: Bus },
         ],
     },

@@ -82,8 +82,8 @@ export default function CitiesPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-right">
                 <div>
-                    <h1 className="text-2xl font-bold text-text-primary">المدن والمحطات</h1>
-                    <p className="text-sm text-text-secondary">إدارة شبكة النقل والنقاط الجغرافية من قاعدة البيانات</p>
+                    <h1 className="text-2xl font-bold text-text-primary">من موقف لموقف</h1>
+                    <p className="text-sm text-text-secondary">إدارة نقاط التوقف وشبكة النقل من قاعدة البيانات</p>
                 </div>
                 <button
                     onClick={() => setCityModal({ open: true })}
