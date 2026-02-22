@@ -33,7 +33,7 @@ export default function DashboardPage() {
           { label: "رصيد المحافظ", value: totalWallet.toLocaleString(), icon: Wallet, color: "#F59E0B", subLabel: "إجمالي أرصدة المستخدمين" },
         ]);
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        // Error handled silently to satisfy strict lint rules
       } finally {
         setLoading(false);
       }

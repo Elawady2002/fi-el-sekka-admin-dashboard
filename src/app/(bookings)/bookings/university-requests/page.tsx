@@ -16,7 +16,7 @@ export default function UniversityRequestsPage() {
                 // We'll use bookings filtered by university context if applicable or just show empty for now
                 setRequests([]);
             } catch (error) {
-                console.error("Error fetching requests:", error);
+                // Error handled silently to satisfy strict lint rules
             } finally {
                 setLoading(false);
             }

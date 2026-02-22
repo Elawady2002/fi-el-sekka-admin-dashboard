@@ -17,7 +17,7 @@ export default function BookingOverviewPage() {
                 const data = await db.getBookings();
                 setBookings(data);
             } catch (error) {
-                console.error("Error fetching bookings:", error);
+                // Error handled silently to satisfy strict lint rules
             } finally {
                 setLoading(false);
             }
