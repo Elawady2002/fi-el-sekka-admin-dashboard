@@ -325,26 +325,31 @@ export default function CitiesPage() {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs text-text-secondary">محطات الوصول (المستهدفة)</label>
-                                <div className="max-h-48 overflow-y-auto border border-border-dark rounded-xl bg-white/5 p-2 space-y-1 scrollbar-thin">
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-text-secondary pr-1 border-r-2 border-primary-green">محطات الوصول (المستهدفة)</label>
+                                <div className="max-h-60 overflow-y-auto border border-border-dark rounded-2xl bg-black/20 p-3 space-y-4 scrollbar-thin">
                                     {cities.map(c => {
                                         const cityStations = stations.filter(s => s.city_id === c.id && s.id !== stationModal.station?.id);
                                         if (cityStations.length === 0) return null;
                                         return (
-                                            <div key={c.id} className="space-y-1 pb-1 mb-1 border-b border-white/5 last:border-0">
-                                                <p className="text-[10px] font-bold text-primary-green px-1">{c.name_ar}</p>
-                                                <div className="grid grid-cols-2 gap-1 px-1">
+                                            <div key={c.id} className="space-y-2">
+                                                <div className="flex items-center gap-2 px-1">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary-green" />
+                                                    <p className="text-[11px] font-bold text-primary-green">{c.name_ar}</p>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
                                                     {cityStations.map(s => (
-                                                        <label key={s.id} className="flex items-center gap-2 p-1.5 hover:bg-white/5 rounded cursor-pointer transition-colors">
-                                                            <input
-                                                                type="checkbox"
-                                                                name="destination_ids"
-                                                                value={s.id}
-                                                                defaultChecked={stationModal.station?.destination_ids?.includes(s.id)}
-                                                                className="w-3 h-3 accent-primary-green"
-                                                            />
-                                                            <span className="text-[11px] text-text-primary truncate">{s.name_ar}</span>
+                                                        <label key={s.id} className="flex items-center gap-3 p-2.5 bg-white/5 hover:bg-primary-green/10 rounded-xl cursor-pointer transition-all border border-border-dark/50 hover:border-primary-green/30 group">
+                                                            <div className="relative flex items-center justify-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    name="destination_ids"
+                                                                    value={s.id}
+                                                                    defaultChecked={stationModal.station?.destination_ids?.includes(s.id)}
+                                                                    className="w-4 h-4 accent-primary-green rounded cursor-pointer"
+                                                                />
+                                                            </div>
+                                                            <span className="text-[11px] text-text-primary truncate font-medium group-hover:text-primary-green transition-colors">{s.name_ar}</span>
                                                         </label>
                                                     ))}
                                                 </div>
@@ -352,7 +357,7 @@ export default function CitiesPage() {
                                         );
                                     })}
                                 </div>
-                                <p className="text-[9px] text-text-muted italic">اختر المحطات التي يمكن الوصول إليها من هذه المحطة</p>
+                                <p className="text-[10px] text-text-muted italic px-1">الرجاء تحديد المحطات التي يمكن للمسافر التوجه إليها من هذه المحطة.</p>
                             </div>
 
                             <button className="btn-primary w-full py-3 mt-4">حفظ المحطة</button>
