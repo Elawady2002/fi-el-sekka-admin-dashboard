@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-    --font-display: "Cairo", sans-serif;
-    --font-body: "Inter", sans-serif;
+    --font-display: var(--font-cairo), "Cairo", sans-serif;
+    --font-body: var(--font-cairo), "Cairo", sans-serif;
 
     /* Premium Swiss Palette */
     --color-primary-gold: #D4AF37;
