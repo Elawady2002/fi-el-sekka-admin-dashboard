@@ -161,191 +161,192 @@ export default function PointToPointPage() {
     };
 
     return (
-        <div className="space-y-8 animate-fade-up h-[calc(100vh-8rem)] flex flex-col">
-            {/* Header */}
-            <div className="flex items-end justify-between shrink-0">
-                <div>
-                    <h2 className="text-3xl font-black italic mb-2">إدارة الخطوط والمحطات</h2>
-                    <p className="text-[10px] text-text-dim uppercase tracking-widest">
-                        Network Hubs & Routing Management
-                    </p>
-                </div>
-            </div>
-
-            {/* 3-Column Layout */}
-            <div className="flex-1 grid grid-cols-3 gap-6 min-h-0">
-
-                {/* Column 1: Cities */}
-                <div className="glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl">
-                    <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
-                        <h3 className="font-black text-lg flex items-center gap-2">
-                            <Building2 size={18} className="text-primary-gold" />
-                            المدن الرئيسية
-                        </h3>
-                        <button
-                            onClick={() => openModal('city')}
-                            className="w-8 h-8 flex items-center justify-center bg-primary-gold text-bg-black hover:bg-white transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]"
-                        >
-                            <Plus size={16} />
-                        </button>
+        <>
+            <div className="space-y-8 animate-fade-up h-[calc(100vh-8rem)] flex flex-col">
+                {/* Header */}
+                <div className="flex items-end justify-between shrink-0">
+                    <div>
+                        <h2 className="text-3xl font-black italic mb-2">إدارة الخطوط والمحطات</h2>
+                        <p className="text-[10px] text-text-dim uppercase tracking-widest">
+                            Network Hubs & Routing Management
+                        </p>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                        {cities.map((city) => (
-                            <div
-                                key={city.id}
-                                onClick={() => handleCitySelect(city.id)}
-                                className={cn(
-                                    "p-4 cursor-pointer transition-all border flex items-center justify-between group",
-                                    selectedCityId === city.id
-                                        ? "bg-primary-gold/10 border-primary-gold text-primary-gold"
-                                        : "bg-surface-dark border-transparent hover:bg-white/5 text-text-main hover:border-white/10"
-                                )}
+                </div>
+
+                {/* 3-Column Layout */}
+                <div className="flex-1 grid grid-cols-3 gap-6 min-h-0">
+
+                    {/* Column 1: Cities */}
+                    <div className="glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl">
+                        <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
+                            <h3 className="font-black text-lg flex items-center gap-2">
+                                <Building2 size={18} className="text-primary-gold" />
+                                المدن الرئيسية
+                            </h3>
+                            <button
+                                onClick={() => openModal('city')}
+                                className="w-8 h-8 flex items-center justify-center bg-primary-gold text-bg-black hover:bg-white transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]"
                             >
-                                <div>
-                                    <h4 className="font-black text-base mb-1">{city.nameAr}</h4>
-                                    <p className={cn(
-                                        "text-[10px] uppercase font-bold tracking-widest",
-                                        selectedCityId === city.id ? "text-primary-gold/70" : "text-text-dim"
-                                    )}>{city.nameEn}</p>
-                                </div>
-                                <ChevronLeft size={16} className={cn(
-                                    "transition-all",
-                                    selectedCityId === city.id ? "opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0"
-                                )} />
-                            </div>
-                        ))}
-                        {cities.length === 0 && (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
-                                <Building2 size={32} className="mb-4 text-text-dim" />
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد مدن مضافة</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Column 2: Boarding Stations */}
-                <div className={cn(
-                    "glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl transition-all duration-300",
-                    !selectedCityId && "opacity-50 grayscale pointer-events-none"
-                )}>
-                    <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
-                        <h3 className="font-black text-lg flex items-center gap-2">
-                            <MapPinned size={18} className="text-white" />
-                            محطات الركوب
-                        </h3>
-                        <button
-                            onClick={() => openModal('boarding')}
-                            disabled={!selectedCityId}
-                            className="w-8 h-8 flex items-center justify-center bg-white text-bg-black hover:bg-primary-gold disabled:opacity-50 transition-all"
-                        >
-                            <Plus size={16} />
-                        </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                        {!selectedCityId ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">اختر مدينة أولاً</p>
-                            </div>
-                        ) : selectedCity?.boardingStations.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
-                                <MapPinned size={32} className="mb-4 text-text-dim" />
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد محطات ركوب</p>
-                            </div>
-                        ) : (
-                            selectedCity?.boardingStations.map((boarding) => (
+                                <Plus size={16} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                            {cities.map((city) => (
                                 <div
-                                    key={boarding.id}
-                                    onClick={() => setSelectedBoardingId(boarding.id)}
+                                    key={city.id}
+                                    onClick={() => handleCitySelect(city.id)}
                                     className={cn(
                                         "p-4 cursor-pointer transition-all border flex items-center justify-between group",
-                                        selectedBoardingId === boarding.id
-                                            ? "bg-white/10 border-white text-white"
+                                        selectedCityId === city.id
+                                            ? "bg-primary-gold/10 border-primary-gold text-primary-gold"
                                             : "bg-surface-dark border-transparent hover:bg-white/5 text-text-main hover:border-white/10"
                                     )}
                                 >
                                     <div>
-                                        <h4 className="font-black text-base mb-1">{boarding.nameAr}</h4>
+                                        <h4 className="font-black text-base mb-1">{city.nameAr}</h4>
                                         <p className={cn(
                                             "text-[10px] uppercase font-bold tracking-widest",
-                                            selectedBoardingId === boarding.id ? "text-white/70" : "text-text-dim"
-                                        )}>{boarding.nameEn}</p>
+                                            selectedCityId === city.id ? "text-primary-gold/70" : "text-text-dim"
+                                        )}>{city.nameEn}</p>
                                     </div>
                                     <ChevronLeft size={16} className={cn(
                                         "transition-all",
-                                        selectedBoardingId === boarding.id ? "opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0"
+                                        selectedCityId === city.id ? "opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0"
                                     )} />
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* Column 3: Arrival Stations */}
-                <div className={cn(
-                    "glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl transition-all duration-300",
-                    !selectedBoardingId && "opacity-50 grayscale pointer-events-none"
-                )}>
-                    <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
-                        <h3 className="font-black text-lg flex items-center gap-2">
-                            <MapPin size={18} className="text-state-success" />
-                            محطات الوصول
-                        </h3>
-                        <button
-                            onClick={() => openModal('arrival')}
-                            disabled={!selectedBoardingId}
-                            className="w-8 h-8 flex items-center justify-center bg-state-success text-bg-black hover:bg-white disabled:opacity-50 transition-all font-black"
-                        >
-                            <Plus size={16} />
-                        </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                        {!selectedBoardingId ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">اختر محطة ركوب أولاً</p>
-                            </div>
-                        ) : selectedBoarding?.arrivalStations.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
-                                <MapPin size={32} className="mb-4 text-text-dim" />
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد محطات وصول مضافة</p>
-                            </div>
-                        ) : (
-                            selectedBoarding?.arrivalStations.map((arrival) => (
-                                <div
-                                    key={arrival.id}
-                                    className="p-4 bg-surface-dark border border-white/5 flex flex-col hover:border-white/10 transition-all gap-3"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h4 className="font-black text-base mb-1">{arrival.nameAr}</h4>
-                                            <p className="text-[10px] uppercase font-bold tracking-widest text-text-dim">{arrival.nameEn}</p>
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="text-sm font-black text-state-success flex items-center gap-1 justify-end">
-                                                {arrival.price} <span className="text-[10px] text-text-dim">EGP</span>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
-                                        {arrival.schedules.map((time, idx) => (
-                                            <span key={idx} className="bg-white/5 border border-white/10 px-2 py-1 text-[9px] font-bold text-text-main flex items-center gap-1">
-                                                <Clock size={10} className="text-primary-gold" />
-                                                {time}
-                                            </span>
-                                        ))}
-                                    </div>
+                            ))}
+                            {cities.length === 0 && (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
+                                    <Building2 size={32} className="mb-4 text-text-dim" />
+                                    <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد مدن مضافة</p>
                                 </div>
-                            ))
-                        )}
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Column 2: Boarding Stations */}
+                    <div className={cn(
+                        "glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl transition-all duration-300",
+                        !selectedCityId && "opacity-50 grayscale pointer-events-none"
+                    )}>
+                        <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
+                            <h3 className="font-black text-lg flex items-center gap-2">
+                                <MapPinned size={18} className="text-white" />
+                                محطات الركوب
+                            </h3>
+                            <button
+                                onClick={() => openModal('boarding')}
+                                disabled={!selectedCityId}
+                                className="w-8 h-8 flex items-center justify-center bg-white text-bg-black hover:bg-primary-gold disabled:opacity-50 transition-all"
+                            >
+                                <Plus size={16} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                            {!selectedCityId ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                                    <p className="text-xs font-black uppercase tracking-widest text-text-dim">اختر مدينة أولاً</p>
+                                </div>
+                            ) : selectedCity?.boardingStations.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
+                                    <MapPinned size={32} className="mb-4 text-text-dim" />
+                                    <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد محطات ركوب</p>
+                                </div>
+                            ) : (
+                                selectedCity?.boardingStations.map((boarding) => (
+                                    <div
+                                        key={boarding.id}
+                                        onClick={() => setSelectedBoardingId(boarding.id)}
+                                        className={cn(
+                                            "p-4 cursor-pointer transition-all border flex items-center justify-between group",
+                                            selectedBoardingId === boarding.id
+                                                ? "bg-white/10 border-white text-white"
+                                                : "bg-surface-dark border-transparent hover:bg-white/5 text-text-main hover:border-white/10"
+                                        )}
+                                    >
+                                        <div>
+                                            <h4 className="font-black text-base mb-1">{boarding.nameAr}</h4>
+                                            <p className={cn(
+                                                "text-[10px] uppercase font-bold tracking-widest",
+                                                selectedBoardingId === boarding.id ? "text-white/70" : "text-text-dim"
+                                            )}>{boarding.nameEn}</p>
+                                        </div>
+                                        <ChevronLeft size={16} className={cn(
+                                            "transition-all",
+                                            selectedBoardingId === boarding.id ? "opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0"
+                                        )} />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Column 3: Arrival Stations */}
+                    <div className={cn(
+                        "glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl transition-all duration-300",
+                        !selectedBoardingId && "opacity-50 grayscale pointer-events-none"
+                    )}>
+                        <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
+                            <h3 className="font-black text-lg flex items-center gap-2">
+                                <MapPin size={18} className="text-state-success" />
+                                محطات الوصول
+                            </h3>
+                            <button
+                                onClick={() => openModal('arrival')}
+                                disabled={!selectedBoardingId}
+                                className="w-8 h-8 flex items-center justify-center bg-state-success text-bg-black hover:bg-white disabled:opacity-50 transition-all font-black"
+                            >
+                                <Plus size={16} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                            {!selectedBoardingId ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                                    <p className="text-xs font-black uppercase tracking-widest text-text-dim">اختر محطة ركوب أولاً</p>
+                                </div>
+                            ) : selectedBoarding?.arrivalStations.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
+                                    <MapPin size={32} className="mb-4 text-text-dim" />
+                                    <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد محطات وصول مضافة</p>
+                                </div>
+                            ) : (
+                                selectedBoarding?.arrivalStations.map((arrival) => (
+                                    <div
+                                        key={arrival.id}
+                                        className="p-4 bg-surface-dark border border-white/5 flex flex-col hover:border-white/10 transition-all gap-3"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="font-black text-base mb-1">{arrival.nameAr}</h4>
+                                                <p className="text-[10px] uppercase font-bold tracking-widest text-text-dim">{arrival.nameEn}</p>
+                                            </div>
+                                            <div className="text-left">
+                                                <p className="text-sm font-black text-state-success flex items-center gap-1 justify-end">
+                                                    {arrival.price} <span className="text-[10px] text-text-dim">EGP</span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+                                            {arrival.schedules.map((time, idx) => (
+                                                <span key={idx} className="bg-white/5 border border-white/10 px-2 py-1 text-[9px] font-bold text-text-main flex items-center gap-1">
+                                                    <Clock size={10} className="text-primary-gold" />
+                                                    {time}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </div>
-
             </div>
 
             {/* Modal - Enhanced with Pricing and Scheduling */}
             {showModal && (
-                <div className="fixed top-0 left-0 w-full h-screen z-9999 flex items-start justify-center pt-24 pb-10 p-6 bg-bg-black/60 backdrop-blur-sm animate-fade-in overflow-y-auto scrollbar-hide">
-                    <div className="glass-card w-full max-w-lg p-10 space-y-8 animate-fade-up shadow-2xl border-white/10 my-auto">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-black/80 backdrop-blur-md animate-fade-in">
+                    <div className="glass-card w-full max-w-lg p-10 space-y-8 shadow-2xl border-white/10 animate-fade-up">
                         <div className="flex items-start justify-between">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
@@ -402,7 +403,6 @@ export default function PointToPointPage() {
                             {/* Arrival Specific Fields (Pricing & Schedules) */}
                             {showModal === 'arrival' && (
                                 <div className="p-5 bg-black/40 border border-white/5 space-y-6 mt-6">
-
                                     {/* Price */}
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase text-text-main tracking-widest flex items-center gap-2">
@@ -458,29 +458,28 @@ export default function PointToPointPage() {
                                             </div>
                                         )}
                                     </div>
-
                                 </div>
                             )}
-                        </div>
 
-                        <div className="flex gap-4 pt-4 border-t border-white/5 mt-8">
-                            <button
-                                onClick={() => setShowModal(null)}
-                                className="flex-1 h-14 text-[10px] font-black uppercase tracking-widest text-text-dim hover:text-text-main transition-all border border-white/5 hover:bg-white/5"
-                            >
-                                إلغاء
-                            </button>
-                            <button
-                                onClick={handleAddEntity}
-                                disabled={!isFormValid()}
-                                className="flex-1 h-14 bg-text-main text-bg-black font-display font-black text-xs uppercase tracking-widest transition-all hover:bg-primary-gold disabled:opacity-50 disabled:hover:bg-text-main active:scale-95 px-6"
-                            >
-                                حفظ
-                            </button>
+                            <div className="flex gap-4 pt-4 border-t border-white/5 mt-8">
+                                <button
+                                    onClick={() => setShowModal(null)}
+                                    className="flex-1 h-14 text-[10px] font-black uppercase tracking-widest text-text-dim hover:text-text-main transition-all border border-white/5 hover:bg-white/5"
+                                >
+                                    إلغاء
+                                </button>
+                                <button
+                                    onClick={handleAddEntity}
+                                    disabled={!isFormValid()}
+                                    className="flex-1 h-14 bg-text-main text-bg-black font-display font-black text-xs uppercase tracking-widest transition-all hover:bg-primary-gold disabled:opacity-50 disabled:hover:bg-text-main active:scale-95 px-6"
+                                >
+                                    حفظ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }
