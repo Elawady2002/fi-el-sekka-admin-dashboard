@@ -237,7 +237,7 @@ export default function PointToPointPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-100 flex items-center justify-center p-6 bg-bg-black/90 backdrop-blur-md animate-fade-in">
+                <div className="fixed inset-0 z-60 flex items-center justify-center p-6 bg-bg-black/95 backdrop-blur-sm animate-fade-in">
                     <div className="glass-card w-full max-w-lg p-12 space-y-10 animate-fade-up shadow-2xl border-white/10">
                         <div className="flex items-start justify-between">
                             <div>
@@ -248,7 +248,7 @@ export default function PointToPointPage() {
                                             showModal === 'pickup' ? 'Pickup Point Management' : 'Drop-off Point Management'}
                                     </span>
                                 </div>
-                                <h3 className="text-2xl font-black italic uppercase leading-none">
+                                <h3 className="text-xl font-black italic uppercase leading-none">
                                     {showModal === 'city' ? 'إضافة مدينة جديدة' :
                                         showModal === 'pickup' ? 'إضافة نقطة ركوب' : 'إضافة نقطة وصول'}
                                 </h3>
