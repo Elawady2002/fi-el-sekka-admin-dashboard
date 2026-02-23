@@ -7,7 +7,10 @@ import {
     X,
     MapPinned,
     Building2,
-    ChevronLeft
+    ChevronLeft,
+    Clock,
+    Banknote,
+    Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,60 +20,85 @@ type Entity = {
     nameEn: string;
 };
 
-type DropOffPoint = Entity;
-type PickupPoint = Entity & { dropOffPoints: DropOffPoint[] };
-type City = Entity & { pickupPoints: PickupPoint[] };
+type ArrivalStation = Entity & {
+    price: number;
+    schedules: string[];
+};
+type BoardingStation = Entity & { arrivalStations: ArrivalStation[] };
+type City = Entity & { boardingStations: BoardingStation[] };
 
 export default function PointToPointPage() {
     const [selectedCityId, setSelectedCityId] = useState<string | null>("1");
-    const [selectedPickupId, setSelectedPickupId] = useState<string | null>("p1");
+    const [selectedBoardingId, setSelectedBoardingId] = useState<string | null>("p1");
 
-    const [showModal, setShowModal] = useState<'city' | 'pickup' | 'dropoff' | null>(null);
-    const [modalData, setModalData] = useState({ nameAr: "", nameEn: "" });
+    const [showModal, setShowModal] = useState<'city' | 'boarding' | 'arrival' | null>(null);
 
-    // Clean, generic mock data for Point to Point
+    const [modalData, setModalData] = useState<{
+        nameAr: string;
+        nameEn: string;
+        price: string;
+        schedules: string[];
+        newSchedule: string;
+    }>({ nameAr: "", nameEn: "", price: "", schedules: [], newSchedule: "" });
+
     const [cities, setCities] = useState<City[]>([
         {
             id: "1", nameAr: "مدينة الرياض", nameEn: "Riyadh City",
-            pickupPoints: [
+            boardingStations: [
                 {
                     id: "p1", nameAr: "المحطة الرئيسية", nameEn: "Main Station",
-                    dropOffPoints: [
-                        { id: "d1", nameAr: "نقطة توقف أ", nameEn: "Stop Point A" },
-                        { id: "d2", nameAr: "نقطة توقف ب", nameEn: "Stop Point B" }
+                    arrivalStations: [
+                        { id: "d1", nameAr: "المطار", nameEn: "Airport", price: 150, schedules: ["10:00 AM", "02:00 PM"] },
+                        { id: "d2", nameAr: "وسط البلد", nameEn: "Downtown", price: 50, schedules: ["11:30 AM"] }
                     ]
                 },
                 {
                     id: "p2", nameAr: "محطة الشمال", nameEn: "North Station",
-                    dropOffPoints: [
-                        { id: "d3", nameAr: "بوابة المعارض", nameEn: "Expo Gate" }
+                    arrivalStations: [
+                        { id: "d3", nameAr: "بوابة المعارض", nameEn: "Expo Gate", price: 100, schedules: ["08:00 AM", "04:00 PM"] }
                     ]
                 }
             ]
         },
         {
             id: "2", nameAr: "مدينة جدة", nameEn: "Jeddah City",
-            pickupPoints: [
+            boardingStations: [
                 {
-                    id: "p3", nameAr: "محطة المطار", nameEn: "Airport Station",
-                    dropOffPoints: []
+                    id: "p3", nameAr: "محطة القطار", nameEn: "Train Station",
+                    arrivalStations: []
                 }
             ]
         },
     ]);
 
     const selectedCity = cities.find(c => c.id === selectedCityId) || null;
-    const selectedPickup = selectedCity?.pickupPoints.find(p => p.id === selectedPickupId) || null;
+    const selectedBoarding = selectedCity?.boardingStations.find(p => p.id === selectedBoardingId) || null;
 
     const handleCitySelect = (cityId: string) => {
         setSelectedCityId(cityId);
-        // Reset child selection when parent changes
-        setSelectedPickupId(null);
+        setSelectedBoardingId(null);
     };
 
-    const openModal = (type: 'city' | 'pickup' | 'dropoff') => {
+    const openModal = (type: 'city' | 'boarding' | 'arrival') => {
         setShowModal(type);
-        setModalData({ nameAr: "", nameEn: "" });
+        setModalData({ nameAr: "", nameEn: "", price: "", schedules: [], newSchedule: "" });
+    };
+
+    const handleAddSchedule = () => {
+        if (modalData.newSchedule.trim()) {
+            setModalData(prev => ({
+                ...prev,
+                schedules: [...prev.schedules, prev.newSchedule.trim()],
+                newSchedule: ""
+            }));
+        }
+    };
+
+    const handleRemoveSchedule = (idxToRemove: number) => {
+        setModalData(prev => ({
+            ...prev,
+            schedules: prev.schedules.filter((_, idx) => idx !== idxToRemove)
+        }));
     };
 
     const handleAddEntity = () => {
@@ -79,39 +107,41 @@ export default function PointToPointPage() {
                 id: Math.random().toString(),
                 nameAr: modalData.nameAr,
                 nameEn: modalData.nameEn,
-                pickupPoints: []
+                boardingStations: []
             };
             setCities([...cities, newCity]);
             setSelectedCityId(newCity.id);
-            setSelectedPickupId(null);
+            setSelectedBoardingId(null);
         }
-        else if (showModal === 'pickup' && selectedCityId) {
-            const newPickup: PickupPoint = {
+        else if (showModal === 'boarding' && selectedCityId) {
+            const newBoarding: BoardingStation = {
                 id: Math.random().toString(),
                 nameAr: modalData.nameAr,
                 nameEn: modalData.nameEn,
-                dropOffPoints: []
+                arrivalStations: []
             };
             setCities(cities.map(c =>
                 c.id === selectedCityId
-                    ? { ...c, pickupPoints: [...c.pickupPoints, newPickup] }
+                    ? { ...c, boardingStations: [...c.boardingStations, newBoarding] }
                     : c
             ));
-            setSelectedPickupId(newPickup.id);
+            setSelectedBoardingId(newBoarding.id);
         }
-        else if (showModal === 'dropoff' && selectedCityId && selectedPickupId) {
-            const newDropoff: DropOffPoint = {
+        else if (showModal === 'arrival' && selectedCityId && selectedBoardingId) {
+            const newArrival: ArrivalStation = {
                 id: Math.random().toString(),
                 nameAr: modalData.nameAr,
-                nameEn: modalData.nameEn
+                nameEn: modalData.nameEn,
+                price: Number(modalData.price) || 0,
+                schedules: modalData.schedules
             };
             setCities(cities.map(c => {
                 if (c.id === selectedCityId) {
                     return {
                         ...c,
-                        pickupPoints: c.pickupPoints.map(p =>
-                            p.id === selectedPickupId
-                                ? { ...p, dropOffPoints: [...p.dropOffPoints, newDropoff] }
+                        boardingStations: c.boardingStations.map(p =>
+                            p.id === selectedBoardingId
+                                ? { ...p, arrivalStations: [...p.arrivalStations, newArrival] }
                                 : p
                         )
                     };
@@ -122,6 +152,14 @@ export default function PointToPointPage() {
         setShowModal(null);
     };
 
+    const isFormValid = () => {
+        if (!modalData.nameAr || !modalData.nameEn) return false;
+        if (showModal === 'arrival') {
+            if (!modalData.price || modalData.schedules.length === 0) return false;
+        }
+        return true;
+    };
+
     return (
         <div className="space-y-8 animate-fade-up h-[calc(100vh-8rem)] flex flex-col">
             {/* Header */}
@@ -129,7 +167,7 @@ export default function PointToPointPage() {
                 <div>
                     <h2 className="text-3xl font-black italic mb-2">إدارة الخطوط والمحطات</h2>
                     <p className="text-[10px] text-text-dim uppercase tracking-widest">
-                        Point to Point - Master/Detail View
+                        Network Hubs & Routing Management
                     </p>
                 </div>
             </div>
@@ -142,7 +180,7 @@ export default function PointToPointPage() {
                     <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
                         <h3 className="font-black text-lg flex items-center gap-2">
                             <Building2 size={18} className="text-primary-gold" />
-                            المدن
+                            المدن الرئيسية
                         </h3>
                         <button
                             onClick={() => openModal('city')}
@@ -185,7 +223,7 @@ export default function PointToPointPage() {
                     </div>
                 </div>
 
-                {/* Column 2: Pickups */}
+                {/* Column 2: Boarding Stations */}
                 <div className={cn(
                     "glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl transition-all duration-300",
                     !selectedCityId && "opacity-50 grayscale pointer-events-none"
@@ -193,10 +231,10 @@ export default function PointToPointPage() {
                     <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
                         <h3 className="font-black text-lg flex items-center gap-2">
                             <MapPinned size={18} className="text-white" />
-                            نقاط الركوب
+                            محطات الركوب
                         </h3>
                         <button
-                            onClick={() => openModal('pickup')}
+                            onClick={() => openModal('boarding')}
                             disabled={!selectedCityId}
                             className="w-8 h-8 flex items-center justify-center bg-white text-bg-black hover:bg-primary-gold disabled:opacity-50 transition-all"
                         >
@@ -208,33 +246,33 @@ export default function PointToPointPage() {
                             <div className="h-full flex flex-col items-center justify-center text-center p-6">
                                 <p className="text-xs font-black uppercase tracking-widest text-text-dim">اختر مدينة أولاً</p>
                             </div>
-                        ) : selectedCity?.pickupPoints.length === 0 ? (
+                        ) : selectedCity?.boardingStations.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
                                 <MapPinned size={32} className="mb-4 text-text-dim" />
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد نقاط ركوب</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد محطات ركوب</p>
                             </div>
                         ) : (
-                            selectedCity?.pickupPoints.map((pickup) => (
+                            selectedCity?.boardingStations.map((boarding) => (
                                 <div
-                                    key={pickup.id}
-                                    onClick={() => setSelectedPickupId(pickup.id)}
+                                    key={boarding.id}
+                                    onClick={() => setSelectedBoardingId(boarding.id)}
                                     className={cn(
                                         "p-4 cursor-pointer transition-all border flex items-center justify-between group",
-                                        selectedPickupId === pickup.id
+                                        selectedBoardingId === boarding.id
                                             ? "bg-white/10 border-white text-white"
                                             : "bg-surface-dark border-transparent hover:bg-white/5 text-text-main hover:border-white/10"
                                     )}
                                 >
                                     <div>
-                                        <h4 className="font-black text-base mb-1">{pickup.nameAr}</h4>
+                                        <h4 className="font-black text-base mb-1">{boarding.nameAr}</h4>
                                         <p className={cn(
                                             "text-[10px] uppercase font-bold tracking-widest",
-                                            selectedPickupId === pickup.id ? "text-white/70" : "text-text-dim"
-                                        )}>{pickup.nameEn}</p>
+                                            selectedBoardingId === boarding.id ? "text-white/70" : "text-text-dim"
+                                        )}>{boarding.nameEn}</p>
                                     </div>
                                     <ChevronLeft size={16} className={cn(
                                         "transition-all",
-                                        selectedPickupId === pickup.id ? "opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0"
+                                        selectedBoardingId === boarding.id ? "opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0"
                                     )} />
                                 </div>
                             ))
@@ -242,43 +280,59 @@ export default function PointToPointPage() {
                     </div>
                 </div>
 
-                {/* Column 3: Drop-offs */}
+                {/* Column 3: Arrival Stations */}
                 <div className={cn(
                     "glass-card p-0 flex flex-col h-full overflow-hidden border-white/5 shadow-2xl transition-all duration-300",
-                    !selectedPickupId && "opacity-50 grayscale pointer-events-none"
+                    !selectedBoardingId && "opacity-50 grayscale pointer-events-none"
                 )}>
                     <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40 shrink-0">
                         <h3 className="font-black text-lg flex items-center gap-2">
                             <MapPin size={18} className="text-state-success" />
-                            نقاط الوصول
+                            محطات الوصول
                         </h3>
                         <button
-                            onClick={() => openModal('dropoff')}
-                            disabled={!selectedPickupId}
+                            onClick={() => openModal('arrival')}
+                            disabled={!selectedBoardingId}
                             className="w-8 h-8 flex items-center justify-center bg-state-success text-bg-black hover:bg-white disabled:opacity-50 transition-all font-black"
                         >
                             <Plus size={16} />
                         </button>
                     </div>
                     <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                        {!selectedPickupId ? (
+                        {!selectedBoardingId ? (
                             <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">اختر نقطة ركوب أولاً</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">اختر محطة ركوب أولاً</p>
                             </div>
-                        ) : selectedPickup?.dropOffPoints.length === 0 ? (
+                        ) : selectedBoarding?.arrivalStations.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-50">
                                 <MapPin size={32} className="mb-4 text-text-dim" />
-                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد نقاط وصول</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-text-dim">لا توجد محطات وصول مضافة</p>
                             </div>
                         ) : (
-                            selectedPickup?.dropOffPoints.map((dropoff) => (
+                            selectedBoarding?.arrivalStations.map((arrival) => (
                                 <div
-                                    key={dropoff.id}
-                                    className="p-4 bg-surface-dark border border-white/5 flex items-center justify-between hover:border-white/10 transition-all"
+                                    key={arrival.id}
+                                    className="p-4 bg-surface-dark border border-white/5 flex flex-col hover:border-white/10 transition-all gap-3"
                                 >
-                                    <div>
-                                        <h4 className="font-black text-base">{dropoff.nameAr}</h4>
-                                        <p className="text-[10px] uppercase font-bold tracking-widest text-text-dim">{dropoff.nameEn}</p>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h4 className="font-black text-base mb-1">{arrival.nameAr}</h4>
+                                            <p className="text-[10px] uppercase font-bold tracking-widest text-text-dim">{arrival.nameEn}</p>
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-sm font-black text-state-success flex items-center gap-1 justify-end">
+                                                {arrival.price} <span className="text-[10px] text-text-dim">EGP</span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+                                        {arrival.schedules.map((time, idx) => (
+                                            <span key={idx} className="bg-white/5 border border-white/10 px-2 py-1 text-[9px] font-bold text-text-main flex items-center gap-1">
+                                                <Clock size={10} className="text-primary-gold" />
+                                                {time}
+                                            </span>
+                                        ))}
                                     </div>
                                 </div>
                             ))
@@ -288,70 +342,127 @@ export default function PointToPointPage() {
 
             </div>
 
-            {/* Modal - Same Premium UI */}
+            {/* Modal - Enhanced with Pricing and Scheduling */}
             {showModal && (
-                <div className="fixed top-0 left-0 w-full h-screen z-9999 flex items-start justify-center pt-32 p-6 bg-bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="glass-card w-full max-w-lg p-12 space-y-10 animate-fade-up shadow-2xl border-white/10">
+                <div className="fixed top-0 left-0 w-full h-screen z-9999 flex items-start justify-center pt-24 pb-10 p-6 bg-bg-black/60 backdrop-blur-sm animate-fade-in overflow-y-auto scrollbar-hide">
+                    <div className="glass-card w-full max-w-lg p-10 space-y-8 animate-fade-up shadow-2xl border-white/10 my-auto">
                         <div className="flex items-start justify-between">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="w-1.5 h-1.5 bg-primary-gold" />
                                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary-gold">
                                         {showModal === 'city' ? 'City' :
-                                            showModal === 'pickup' ? 'Pickup Point' : 'Drop-off Point'}
+                                            showModal === 'boarding' ? 'Boarding Station' : 'Arrival Config'}
                                     </span>
                                 </div>
                                 <h3 className="text-xl font-black italic uppercase leading-none">
                                     {showModal === 'city' ? 'إضافة مدينة' :
-                                        showModal === 'pickup' ? `محطة ركوب في ${selectedCity?.nameAr}` :
-                                            `نقطة وصول لـ ${selectedPickup?.nameAr}`}
+                                        showModal === 'boarding' ? `محطة ركوب في ${selectedCity?.nameAr}` :
+                                            `محطة وصول وإعداد رحلة`}
                                 </h3>
                             </div>
                             <button
                                 onClick={() => setShowModal(null)}
-                                className="w-10 h-10 flex items-center justify-center border border-white/5 hover:bg-white/5 text-text-dim hover:text-text-main transition-all"
+                                className="w-10 h-10 shrink-0 flex items-center justify-center border border-white/5 hover:bg-white/5 text-text-dim hover:text-text-main transition-all"
                             >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <div className="space-y-8">
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">الاسم بالعربي</label>
-                                    <span className="text-[8px] font-bold text-primary-gold/50 uppercase tracking-widest">Arabic Name</span>
+                        <div className="space-y-6">
+                            {/* Name Fields */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2 col-span-2">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">الاسم بالعربي</label>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        value={modalData.nameAr}
+                                        onChange={(e) => setModalData({ ...modalData, nameAr: e.target.value })}
+                                        className="w-full h-14 bg-white/5 border border-white/10 px-4 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold transition-all text-right"
+                                        placeholder="مثال: محطة التجمع"
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    autoFocus
-                                    value={modalData.nameAr}
-                                    onChange={(e) => setModalData({ ...modalData, nameAr: e.target.value })}
-                                    className="w-full h-16 bg-white/5 border border-white/10 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/10 transition-all text-right"
-                                    placeholder={
-                                        showModal === 'city' ? 'مثال: الرياض' :
-                                            showModal === 'pickup' ? 'مثال: محطة الشمال' : 'مثال: التوقف الأول'
-                                    }
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-left">
-                                    <span className="text-[8px] font-bold text-primary-gold/50 uppercase tracking-widest">English Name</span>
-                                    <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">الاسم بالإنجليزية</label>
+                                <div className="space-y-2 col-span-2">
+                                    <div className="flex justify-between items-center text-left">
+                                        <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">English Name</label>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={modalData.nameEn}
+                                        onChange={(e) => setModalData({ ...modalData, nameEn: e.target.value })}
+                                        className="w-full h-14 bg-white/5 border border-white/10 px-4 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold transition-all text-left"
+                                        placeholder="Example: Tagamoa Station"
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    value={modalData.nameEn}
-                                    onChange={(e) => setModalData({ ...modalData, nameEn: e.target.value })}
-                                    className="w-full h-16 bg-white/5 border border-white/10 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/10 transition-all text-left"
-                                    placeholder={
-                                        showModal === 'city' ? 'Example: Riyadh' :
-                                            showModal === 'pickup' ? 'Example: North Station' : 'Example: First Stop'
-                                    }
-                                />
                             </div>
+
+                            {/* Arrival Specific Fields (Pricing & Schedules) */}
+                            {showModal === 'arrival' && (
+                                <div className="p-5 bg-black/40 border border-white/5 space-y-6 mt-6">
+
+                                    {/* Price */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase text-text-main tracking-widest flex items-center gap-2">
+                                            <Banknote size={14} className="text-state-success" />
+                                            سعر التذكرة (EGP)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={modalData.price}
+                                            onChange={(e) => setModalData({ ...modalData, price: e.target.value })}
+                                            className="w-full h-14 bg-white/5 border border-white/10 px-4 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-state-success transition-all text-left dir-ltr"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+
+                                    {/* Schedules */}
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase text-text-main tracking-widest flex items-center gap-2">
+                                            <Clock size={14} className="text-primary-gold" />
+                                            مواعيد الرحلات
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="time"
+                                                value={modalData.newSchedule}
+                                                onChange={(e) => setModalData({ ...modalData, newSchedule: e.target.value })}
+                                                className="flex-1 h-12 bg-white/5 border border-white/10 px-4 text-sm font-bold outline-none focus:border-primary-gold transition-all"
+                                            />
+                                            <button
+                                                onClick={handleAddSchedule}
+                                                disabled={!modalData.newSchedule}
+                                                className="h-12 px-6 bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest disabled:opacity-50 transition-all border border-white/10"
+                                            >
+                                                إضافة
+                                            </button>
+                                        </div>
+
+                                        {/* Schedule Chips */}
+                                        {modalData.schedules.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 pt-2">
+                                                {modalData.schedules.map((time, idx) => (
+                                                    <div key={idx} className="bg-white/10 border border-white/20 px-3 py-1.5 flex items-center gap-3">
+                                                        <span className="text-xs font-bold font-display tracking-widest">{time}</span>
+                                                        <button
+                                                            onClick={() => handleRemoveSchedule(idx)}
+                                                            className="text-text-dim hover:text-state-error transition-colors"
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex gap-4 pt-6">
+                        <div className="flex gap-4 pt-4 border-t border-white/5 mt-8">
                             <button
                                 onClick={() => setShowModal(null)}
                                 className="flex-1 h-14 text-[10px] font-black uppercase tracking-widest text-text-dim hover:text-text-main transition-all border border-white/5 hover:bg-white/5"
@@ -360,7 +471,7 @@ export default function PointToPointPage() {
                             </button>
                             <button
                                 onClick={handleAddEntity}
-                                disabled={!modalData.nameAr || !modalData.nameEn}
+                                disabled={!isFormValid()}
                                 className="flex-1 h-14 bg-text-main text-bg-black font-display font-black text-xs uppercase tracking-widest transition-all hover:bg-primary-gold disabled:opacity-50 disabled:hover:bg-text-main active:scale-95 px-6"
                             >
                                 حفظ
