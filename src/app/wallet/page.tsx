@@ -93,6 +93,19 @@ export default function WalletPage() {
                     .eq('id', userId);
 
                 if (userUpdateError) throw userUpdateError;
+
+                // 3. Record in wallet_transactions
+                const { error: transError } = await supabase
+                    .from('wallet_transactions')
+                    .insert([{
+                        user_id: userId,
+                        amount: amount,
+                        type: 'credit',
+                        reason: 'شحن المحفظة (فودافون كاش)',
+                        balance_after: newBalance
+                    }]);
+
+                if (transError) throw transError;
             } else {
                 const { error } = await supabase
                     .from('wallet_recharge_requests')

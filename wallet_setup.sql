@@ -20,3 +20,4 @@ CREATE TABLE IF NOT EXISTS public.wallet_recharge_requests (
 -- Disable RLS for development
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallet_recharge_requests DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wallet_transactions DISABLE ROW LEVEL SECURITY;
