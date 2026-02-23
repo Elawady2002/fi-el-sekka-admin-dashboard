@@ -425,33 +425,34 @@ export default function PointToPointPage() {
                                             مواعيد الرحلات
                                         </label>
                                         <div className="flex gap-2">
+                                            <button
+                                                onClick={handleAddSchedule}
+                                                disabled={!modalData.newSchedule}
+                                                className="h-14 px-8 bg-[#1A1A1A] hover:bg-white/5 text-text-main font-black text-[10px] uppercase tracking-widest disabled:opacity-50 transition-all border border-white/10"
+                                            >
+                                                إضافة
+                                            </button>
                                             <input
                                                 type="time"
                                                 value={modalData.newSchedule}
                                                 onChange={(e) => setModalData({ ...modalData, newSchedule: e.target.value })}
-                                                className="flex-1 h-12 bg-white/5 border border-white/10 px-4 text-sm font-bold outline-none focus:border-primary-gold transition-all"
+                                                className="flex-1 h-14 bg-[#1A1A1A] border border-white/10 px-6 text-sm font-bold font-display outline-none focus:border-primary-gold transition-all text-center dir-ltr text-white"
+                                                style={{ colorScheme: 'dark' }}
                                             />
-                                            <button
-                                                onClick={handleAddSchedule}
-                                                disabled={!modalData.newSchedule}
-                                                className="h-12 px-6 bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest disabled:opacity-50 transition-all border border-white/10"
-                                            >
-                                                إضافة
-                                            </button>
                                         </div>
 
                                         {/* Schedule Chips */}
                                         {modalData.schedules.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 pt-2">
+                                            <div className="flex flex-wrap gap-3 pt-3">
                                                 {modalData.schedules.map((time, idx) => (
-                                                    <div key={idx} className="bg-white/10 border border-white/20 px-3 py-1.5 flex items-center gap-3">
-                                                        <span className="text-xs font-bold font-display tracking-widest">{time}</span>
+                                                    <div key={idx} className="bg-[#1A1A1A] border border-white/10 px-5 py-2.5 flex items-center gap-4 hover:border-white/20 transition-all group cursor-default" dir="ltr">
                                                         <button
                                                             onClick={() => handleRemoveSchedule(idx)}
-                                                            className="text-text-dim hover:text-state-error transition-colors"
+                                                            className="text-text-dim group-hover:text-state-error transition-colors focus:outline-none flex items-center justify-center shrink-0"
                                                         >
-                                                            <X size={12} />
+                                                            <X size={15} />
                                                         </button>
+                                                        <span className="text-sm font-bold font-display tracking-widest text-[#E0E0E0] group-hover:text-white transition-colors">{time}</span>
                                                     </div>
                                                 ))}
                                             </div>
