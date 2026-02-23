@@ -237,7 +237,7 @@ export default function PointToPointPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-black/90 backdrop-blur-md animate-fade-in">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-6 bg-bg-black/90 backdrop-blur-md animate-fade-in">
                     <div className="glass-card w-full max-w-lg p-12 space-y-10 animate-fade-up shadow-2xl border-white/10">
                         <div className="flex items-start justify-between">
                             <div>
@@ -272,7 +272,7 @@ export default function PointToPointPage() {
                                     autoFocus
                                     value={modalData.nameAr}
                                     onChange={(e) => setModalData({ ...modalData, nameAr: e.target.value })}
-                                    className="w-full h-16 bg-white/[0.03] border border-white/5 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/[0.05] transition-all text-right"
+                                    className="w-full h-16 bg-white/3 border border-white/5 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/5 transition-all text-right"
                                     placeholder="مثال: مدينة الشروق"
                                 />
                             </div>
@@ -285,7 +285,7 @@ export default function PointToPointPage() {
                                     type="text"
                                     value={modalData.nameEn}
                                     onChange={(e) => setModalData({ ...modalData, nameEn: e.target.value })}
-                                    className="w-full h-16 bg-white/[0.03] border border-white/5 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/[0.05] transition-all text-left"
+                                    className="w-full h-16 bg-white/3 border border-white/5 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/5 transition-all text-left"
                                     placeholder="Example: El Shorouk City"
                                 />
                             </div>

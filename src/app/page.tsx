@@ -55,7 +55,7 @@ export default function DashboardPage() {
 
           <div className="space-y-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center justify-between py-4 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors -mx-4 px-4">
+              <div key={i} className="flex items-center justify-between py-4 border-b border-white/5 last:border-0 hover:bg-white/2 transition-colors -mx-4 px-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-surface-dark flex items-center justify-center font-black">M{i}</div>
                   <div>
