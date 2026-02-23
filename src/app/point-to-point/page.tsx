@@ -163,7 +163,7 @@ export default function PointToPointPage() {
                         <div
                             className={cn(
                                 "p-6 flex items-center justify-between cursor-pointer transition-colors",
-                                expandedCities.has(city.id) ? "bg-white/5" : "hover:bg-white/[0.02]"
+                                expandedCities.has(city.id) ? "bg-white/5" : "hover:bg-white/2"
                             )}
                             onClick={() => toggleCity(city.id)}
                         >
@@ -215,7 +215,7 @@ export default function PointToPointPage() {
                                             <div
                                                 className={cn(
                                                     "p-4 flex items-center justify-between cursor-pointer transition-colors",
-                                                    expandedPickups.has(pickup.id) ? "bg-white/5" : "hover:bg-white/[0.02]"
+                                                    expandedPickups.has(pickup.id) ? "bg-white/5" : "hover:bg-white/2"
                                                 )}
                                                 onClick={() => togglePickup(pickup.id)}
                                             >
@@ -263,7 +263,7 @@ export default function PointToPointPage() {
                                                     ) : (
                                                         <div className="grid grid-cols-2 gap-2">
                                                             {pickup.dropOffPoints.map(dropoff => (
-                                                                <div key={dropoff.id} className="p-3 border border-white/5 bg-white/[0.02] flex items-center justify-between group/dropoff hover:border-white/10 transition-all">
+                                                                <div key={dropoff.id} className="p-3 border border-white/5 bg-white/2 flex items-center justify-between group/dropoff hover:border-white/10 transition-all">
                                                                     <div className="flex items-center gap-3">
                                                                         <div className="w-8 h-8 bg-black/50 flex items-center justify-center border border-white/5 text-state-success">
                                                                             <MapPin size={14} />
@@ -305,7 +305,7 @@ export default function PointToPointPage() {
 
             {/* Modal - Kept the same styled version from previous refinement */}
             {showModal && (
-                <div className="fixed top-0 left-0 w-full h-screen z-[9999] flex items-start justify-center pt-32 p-6 bg-bg-black/60 backdrop-blur-sm animate-fade-in">
+                <div className="fixed top-0 left-0 w-full h-screen z-9999 flex items-start justify-center pt-32 p-6 bg-bg-black/60 backdrop-blur-sm animate-fade-in">
                     <div className="glass-card w-full max-w-lg p-12 space-y-10 animate-fade-up shadow-2xl border-white/10">
                         <div className="flex items-start justify-between">
                             <div>
