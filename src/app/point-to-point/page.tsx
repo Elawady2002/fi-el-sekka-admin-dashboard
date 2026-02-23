@@ -237,49 +237,73 @@ export default function PointToPointPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-bg-black/80 backdrop-blur-sm animate-fade-in">
-                    <div className="glass-card w-full max-w-md p-10 space-y-8 animate-fade-up">
-                        <div className="flex items-center justify-between">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-black/90 backdrop-blur-md animate-fade-in">
+                    <div className="glass-card w-full max-w-lg p-12 space-y-10 animate-fade-up shadow-2xl border-white/10">
+                        <div className="flex items-start justify-between">
                             <div>
-                                <h3 className="text-xl font-black italic uppercase">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-1.5 h-1.5 bg-primary-gold" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary-gold">
+                                        {showModal === 'city' ? 'City Management' :
+                                            showModal === 'pickup' ? 'Pickup Point Management' : 'Drop-off Point Management'}
+                                    </span>
+                                </div>
+                                <h3 className="text-2xl font-black italic uppercase leading-none">
                                     {showModal === 'city' ? 'إضافة مدينة جديدة' :
                                         showModal === 'pickup' ? 'إضافة نقطة ركوب' : 'إضافة نقطة وصول'}
                                 </h3>
-                                <p className="text-[10px] text-text-dim uppercase tracking-widest mt-1">
-                                    Entity Creation Portal - Bilingual Input
-                                </p>
                             </div>
-                            <button onClick={() => setShowModal(null)} className="text-text-dim hover:text-text-main transition-colors">
+                            <button
+                                onClick={() => setShowModal(null)}
+                                className="w-10 h-10 flex items-center justify-center border border-white/5 hover:bg-white/5 text-text-dim hover:text-text-main transition-all"
+                            >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <div className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">الاسم بالعربي</label>
+                        <div className="space-y-8">
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">الاسم بالعربي</label>
+                                    <span className="text-[8px] font-bold text-primary-gold/50 uppercase tracking-widest">Arabic Name</span>
+                                </div>
                                 <input
                                     type="text"
+                                    autoFocus
                                     value={modalData.nameAr}
                                     onChange={(e) => setModalData({ ...modalData, nameAr: e.target.value })}
-                                    className="w-full h-14 bg-white/5 border border-white/10 px-6 text-sm font-bold placeholder:text-text-dim/30 outline-none focus:border-primary-gold transition-colors text-right"
+                                    className="w-full h-16 bg-white/[0.03] border border-white/5 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/[0.05] transition-all text-right"
                                     placeholder="مثال: مدينة الشروق"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">Name in English</label>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center text-left">
+                                    <span className="text-[8px] font-bold text-primary-gold/50 uppercase tracking-widest">English Name</span>
+                                    <label className="text-[10px] font-black uppercase text-text-dim tracking-widest">الاسم بالإنجليزية</label>
+                                </div>
                                 <input
                                     type="text"
                                     value={modalData.nameEn}
                                     onChange={(e) => setModalData({ ...modalData, nameEn: e.target.value })}
-                                    className="w-full h-14 bg-white/5 border border-white/10 px-6 text-sm font-bold placeholder:text-text-dim/30 outline-none focus:border-primary-gold transition-colors text-left"
+                                    className="w-full h-16 bg-white/[0.03] border border-white/5 px-6 text-sm font-bold placeholder:text-text-dim/20 outline-none focus:border-primary-gold focus:bg-white/[0.05] transition-all text-left"
                                     placeholder="Example: El Shorouk City"
                                 />
                             </div>
                         </div>
 
-                        <div className="flex gap-4 pt-4">
-                            <button onClick={() => setShowModal(null)} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-text-dim hover:text-text-main transition-colors border border-white/5 hover:bg-white/5">إلغاء</button>
-                            <button onClick={handleAddEntity} className="flex-1 btn-swiss">حفظ الكيان</button>
+                        <div className="flex gap-4 pt-6">
+                            <button
+                                onClick={() => setShowModal(null)}
+                                className="flex-1 h-14 text-[10px] font-black uppercase tracking-widest text-text-dim hover:text-text-main transition-all border border-white/5 hover:bg-white/5"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                onClick={handleAddEntity}
+                                className="flex-1 h-14 bg-text-main text-bg-black font-display font-black text-xs uppercase tracking-widest transition-all hover:bg-primary-gold active:scale-95 px-6"
+                            >
+                                حفظ الكيان
+                            </button>
                         </div>
                     </div>
                 </div>
