@@ -1,30 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     Check,
     X,
-    Clock,
-    Banknote,
     Eye,
     Loader2,
-    AlertCircle,
-    ExternalLink,
-    ArrowUpRight,
-    ArrowDownRight,
     RefreshCw,
-    Filter
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { sileo } from "sileo";
 
 type WalletTransaction = {
     id: string;
     user_id: string;
     amount: number;
-    type: string; // 'debit' | 'credit'
+    type: string;
     reason: string;
     balance_after: number;
+    status: 'success' | 'failed';
     created_at: string;
     users?: {
         full_name: string;
@@ -34,185 +29,278 @@ type WalletTransaction = {
     };
 };
 
+type WalletRequest = {
+    id: string;
+    user_id: string;
+    amount: number;
+    phone_number: string;
+    proof_image_url: string;
+    method: string;
+    type: 'topup' | 'withdraw';
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+    users?: {
+        full_name: string;
+        phone: string;
+        wallet_balance: number;
+    };
+};
+
 export default function WalletPage() {
     const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+    const [requests, setRequests] = useState<WalletRequest[]>([]);
+    const [activeTab, setActiveTab] = useState<'requests' | 'transactions'>('requests');
     const [loading, setLoading] = useState(true);
     const [filterType, setFilterType] = useState<'all' | 'credit' | 'debit'>('all');
 
-    const fetchTransactions = async () => {
+    const [error, setError] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+    const playNotificationSound = useCallback(() => {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.play().catch(e => console.warn("Audio play blocked by browser:", e));
+    }, []);
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            if (activeTab === 'transactions') {
+                const { data, error: queryError } = await supabase
+                    .from('wallet_transactions')
+                    .select('*, users(full_name, phone, email, wallet_balance)')
+                    .order('created_at', { ascending: false });
+
+                if (queryError) throw queryError;
+                setTransactions(data as any || []);
+            } else {
+                const { data, error: queryError } = await supabase
+                    .from('wallet_requests')
+                    .select('*, users(full_name, phone, wallet_balance)')
+                    .order('created_at', { ascending: false });
+
+                if (queryError) {
+                    const { data: simpleData, error: simpleError } = await supabase
+                        .from('wallet_requests')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    if (simpleError) throw simpleError;
+                    setRequests(simpleData as any || []);
+                } else {
+                    setRequests(data as any || []);
+                }
+            }
+        } catch (err: any) {
+            console.error("Fetch error:", err);
+            setError(err.message || "حدث خطأ أثناء جلب البيانات");
+        } finally {
+            setLoading(false);
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        fetchData();
+
+        // Real-time subscription for new requests
+        const channel = supabase
+            .channel('wallet_requests_changes')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'wallet_requests' },
+                (payload) => {
+                    const newReq = payload.new as WalletRequest;
+                    if (newReq.status === 'pending') {
+                        playNotificationSound();
+                        sileo.info({ description: `طلب شحن جديد بـ ${newReq.amount} EGP من رقم ${newReq.phone_number}` });
+                        fetchData();
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [activeTab, filterType, playNotificationSound, fetchData]);
+
+    const handleApprove = async (request: WalletRequest) => {
+        if (!confirm(`هل أنت متأكد من الموافقة على العملية بمبلغ ${request.amount} EGP؟`)) return;
+
         setLoading(true);
         try {
-            let query = supabase
-                .from('wallet_transactions')
-                .select(`
-                    *,
-                    users (
-                        full_name,
-                        phone,
-                        email,
-                        wallet_balance
-                    )
-                `)
-                .order('created_at', { ascending: false });
+            const { error: rpcError } = await supabase.rpc('approve_wallet_request', {
+                req_id: request.id
+            });
 
-            if (filterType !== 'all') {
-                query = query.eq('type', filterType);
-            }
+            if (rpcError) throw new Error(rpcError.message);
 
-            const { data, error } = await query;
-            if (error) throw error;
-            setTransactions(data as any || []);
-        } catch (error) {
-            console.error("Error fetching transactions:", error);
+            sileo.success({ description: "تمت الموافقة على طلب الشحن بنجاح" });
+            await fetchData();
+
+        } catch (err: any) {
+            console.error("Critical error in handleApprove:", err);
+            sileo.error({ description: "فشلت العملية: " + err.message });
+            fetchData();
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchTransactions();
-    }, [filterType]);
+    const handleReject = async (requestId: string) => {
+        if (!confirm("هل أنت متأكد من رفض هذا الطلب؟")) return;
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('wallet_requests')
+                .update({ status: 'rejected' })
+                .eq('id', requestId);
+            if (error) throw error;
 
-    const totalCredit = transactions.filter(t => t.type === 'credit').reduce((acc, t) => acc + t.amount, 0);
-    const totalDebit = transactions.filter(t => t.type === 'debit').reduce((acc, t) => acc + t.amount, 0);
+            sileo.warning({ description: "تم إغلاق ورفض طلب الشحن" });
+            fetchData();
+        } catch (err: any) {
+            sileo.error({ description: "حدث خطأ أثناء الرفض: " + err.message });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getProofUrl = (path: string) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        const { data } = supabase.storage.from('recharge_proofs').getPublicUrl(path);
+        return data.publicUrl;
+    };
+
+    const totalCredit = transactions.filter(t => t.type === 'credit' && t.status === 'success').reduce((acc, t) => acc + t.amount, 0);
+    const totalDebit = transactions.filter(t => t.type === 'debit' && t.status === 'success').reduce((acc, t) => acc + t.amount, 0);
 
     return (
         <div className="space-y-8 animate-fade-up h-[calc(100vh-8rem)] flex flex-col">
             {/* Header */}
             <div className="flex items-end justify-between shrink-0">
                 <div>
-                    <h2 className="text-3xl font-black italic mb-2">سجل عمليات المحفظة</h2>
+                    <h2 className="text-3xl font-black italic mb-2">إدارة المحفظة (الجديدة)</h2>
                     <p className="text-[10px] text-text-dim uppercase tracking-widest">
-                        Wallet Transactions History
+                        Unified Wallet System
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     {loading && <Loader2 className="animate-spin text-primary-gold" size={24} />}
-                    <button
-                        onClick={fetchTransactions}
-                        className="w-10 h-10 flex items-center justify-center border border-white/10 hover:bg-white/5 text-text-dim hover:text-white transition-all"
-                        title="تحديث"
-                    >
+                    <button onClick={fetchData} className="w-10 h-10 border border-white/10 hover:bg-white/5 text-text-dim hover:text-white flex items-center justify-center transition-all shadow-lg">
                         <RefreshCw size={16} />
                     </button>
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-4 shrink-0">
-                <div className="glass-card p-6 flex flex-col justify-between h-28">
-                    <p className="text-[10px] font-black uppercase text-text-dim tracking-wider">إجمالي العمليات</p>
-                    <h3 className="text-2xl font-black leading-none">{transactions.length}</h3>
-                </div>
-                <div className="glass-card p-6 flex flex-col justify-between h-28">
-                    <p className="text-[10px] font-black uppercase text-state-success tracking-wider flex items-center gap-1">
-                        <ArrowUpRight size={12} /> إجمالي الشحن (Credit)
-                    </p>
-                    <h3 className="text-2xl font-black leading-none text-state-success">{totalCredit} <small className="text-xs opacity-50">EGP</small></h3>
-                </div>
-                <div className="glass-card p-6 flex flex-col justify-between h-28">
-                    <p className="text-[10px] font-black uppercase text-state-error tracking-wider flex items-center gap-1">
-                        <ArrowDownRight size={12} /> إجمالي الخصم (Debit)
-                    </p>
-                    <h3 className="text-2xl font-black leading-none text-state-error">{totalDebit} <small className="text-xs opacity-50">EGP</small></h3>
-                </div>
+            {/* Main Tabs */}
+            <div className="flex items-center gap-1 bg-white/5 p-1 border border-white/5 w-fit shrink-0">
+                <button
+                    onClick={() => setActiveTab('requests')}
+                    className={cn(
+                        "px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                        activeTab === 'requests' ? "bg-primary-gold text-bg-black" : "text-text-dim hover:text-white"
+                    )}
+                >
+                    الطلبات الجديدة ({requests.filter(r => r.status === 'pending').length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('transactions')}
+                    className={cn(
+                        "px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                        activeTab === 'transactions' ? "bg-white text-bg-black" : "text-text-dim hover:text-white"
+                    )}
+                >
+                    سجل المعاملات
+                </button>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-2 shrink-0">
-                <Filter size={14} className="text-text-dim" />
-                {(['all', 'credit', 'debit'] as const).map(type => (
-                    <button
-                        key={type}
-                        onClick={() => setFilterType(type)}
-                        className={cn(
-                            "px-4 py-2 text-[10px] font-black uppercase tracking-widest border transition-all",
-                            filterType === type
-                                ? "bg-primary-gold text-bg-black border-primary-gold"
-                                : "bg-transparent text-text-dim border-white/10 hover:border-white/30 hover:text-white"
-                        )}
-                    >
-                        {type === 'all' ? 'الكل' : type === 'credit' ? 'شحن (Credit)' : 'خصم (Debit)'}
-                    </button>
-                ))}
-            </div>
-
-            {/* Table */}
-            <div className="flex-1 min-h-0 bg-surface-dark border border-white/5 overflow-hidden flex flex-col">
+            {/* Content Area */}
+            <div className="flex-1 min-h-0 bg-surface-dark border border-white/5 overflow-hidden flex flex-col shadow-2xl">
                 <div className="overflow-y-auto flex-1">
                     <table className="w-full text-right border-collapse">
                         <thead className="sticky top-0 z-10">
                             <tr className="bg-black/60 backdrop-blur-sm border-b border-white/10">
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim">المستخدم</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim">النوع</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim">المبلغ</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim">السبب</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim">الرصيد بعد</th>
-                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim">التاريخ</th>
+                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim text-right">المستخدم</th>
+                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim text-center">النوع</th>
+                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim text-center">المبلغ</th>
+                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim text-center">التفاصيل</th>
+                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim text-center">الحالة</th>
+                                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-text-dim text-center">الإجراء</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {transactions.map((tx) => (
-                                <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors">
-                                    <td className="p-5">
-                                        <div className="flex flex-col">
-                                            <span className="font-black text-sm text-text-main">{tx.users?.full_name || 'مستخدم غير معروف'}</span>
-                                            <span className="text-[10px] text-text-dim">{tx.users?.phone || tx.users?.email || '—'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-5">
-                                        <span className={cn(
-                                            "px-3 py-1.5 text-[8px] font-black uppercase tracking-wider inline-flex items-center gap-1",
-                                            tx.type === 'credit'
-                                                ? "bg-state-success/10 text-state-success border border-state-success/20"
-                                                : "bg-state-error/10 text-state-error border border-state-error/20"
-                                        )}>
-                                            {tx.type === 'credit' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
-                                            {tx.type === 'credit' ? 'شحن' : 'خصم'}
-                                        </span>
-                                    </td>
-                                    <td className="p-5">
-                                        <span className={cn(
-                                            "font-black text-sm",
-                                            tx.type === 'credit' ? "text-state-success" : "text-state-error"
-                                        )}>
-                                            {tx.type === 'credit' ? '+' : '-'}{tx.amount} <small className="text-[8px] opacity-70">EGP</small>
-                                        </span>
-                                    </td>
-                                    <td className="p-5">
-                                        <span className="text-xs text-text-main">{tx.reason}</span>
-                                    </td>
-                                    <td className="p-5">
-                                        <span className="font-black text-sm text-primary-gold">
-                                            {tx.balance_after} <small className="text-[8px] opacity-50">EGP</small>
-                                        </span>
-                                    </td>
-                                    <td className="p-5">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-text-main font-bold">
-                                                {new Date(tx.created_at).toLocaleDateString('ar-EG')}
+                            {activeTab === 'requests' ? (
+                                requests.map((req) => (
+                                    <tr key={req.id} className="hover:bg-white/2 transition-colors">
+                                        <td className="p-5 font-black text-sm text-text-main text-right">
+                                            {req.users?.full_name || 'مستخدم غير مربوط'}
+                                            <div className="text-[10px] text-text-dim font-normal">{req.phone_number}</div>
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <span className={cn(
+                                                "px-2 py-0.5 text-[8px] font-black uppercase border inline-block",
+                                                req.type === 'topup' ? "bg-state-success/10 text-state-success border-state-success/20" : "bg-state-error/10 text-state-error border-state-error/20"
+                                            )}>
+                                                {req.type === 'topup' ? 'شحن' : 'سحب'}
                                             </span>
-                                            <span className="text-[9px] text-text-dim">
-                                                {new Date(tx.created_at).toLocaleTimeString('ar-EG')}
+                                        </td>
+                                        <td className="p-5 font-black text-white text-center">{req.amount} EGP</td>
+                                        <td className="p-5">
+                                            <div className="flex items-center justify-center gap-3 text-xs text-text-dim">
+                                                {req.proof_image_url && (
+                                                    <button
+                                                        onClick={() => setSelectedImage(getProofUrl(req.proof_image_url))}
+                                                        className="w-7 h-7 bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary-gold hover:text-bg-black transition-all group/eye shrink-0"
+                                                        title="عرض الإثبات"
+                                                    >
+                                                        <Eye size={12} className="group-hover/eye:scale-110 transition-transform" />
+                                                    </button>
+                                                )}
+                                                <span className="font-medium whitespace-nowrap">{req.method || '—'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <span className={cn(
+                                                "px-2 py-1 text-[8px] font-black uppercase",
+                                                req.status === 'pending' ? "text-primary-gold" : req.status === 'approved' ? "text-state-success" : "text-state-error"
+                                            )}>
+                                                {req.status === 'pending' ? 'بانتظار الموافقة' : req.status === 'approved' ? 'مقبول' : 'مرفوض'}
                                             </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {transactions.length === 0 && !loading && (
-                                <tr>
-                                    <td colSpan={6} className="p-10 text-center">
-                                        <div className="flex flex-col items-center gap-4 opacity-50">
-                                            <AlertCircle size={32} />
-                                            <p className="text-xs font-black uppercase tracking-widest">لا توجد عمليات في المحفظة حالياً</p>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td className="p-5">
+                                            {req.status === 'pending' && (
+                                                <div className="flex gap-2 justify-center">
+                                                    <button onClick={() => handleApprove(req)} className="w-8 h-8 bg-state-success text-bg-black flex items-center justify-center hover:bg-white transition-all shadow-lg"><Check size={16} /></button>
+                                                    <button onClick={() => handleReject(req.id)} className="w-8 h-8 bg-state-error text-bg-black flex items-center justify-center hover:bg-white transition-all shadow-lg"><X size={16} /></button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                transactions.map((tx) => (
+                                    <tr key={tx.id} className="hover:bg-white/2 transition-colors">
+                                        <td className="p-5 font-black text-sm text-text-main">{tx.users?.full_name || 'مستخدم'}</td>
+                                        <td className="p-5 text-[10px] uppercase font-black">{tx.type === 'credit' ? 'إيداع' : 'خصم'}</td>
+                                        <td className="p-5 font-black">{tx.amount} EGP</td>
+                                        <td className="p-5 text-xs text-text-dim">{tx.reason}</td>
+                                        <td className="p-5 text-xs text-primary-gold font-bold">{tx.balance_after} EGP</td>
+                                        <td className="p-5 text-[10px] text-text-dim">{new Date(tx.created_at).toLocaleDateString('ar-EG')}</td>
+                                    </tr>
+                                ))
                             )}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            {/* Proof Modal stays same if needed */}
+            {selectedImage && (
+                <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-10" onClick={() => setSelectedImage(null)}>
+                    <img src={selectedImage} alt="Proof" className="max-w-full max-h-full object-contain shadow-2xl" />
+                </div>
+            )}
         </div>
     );
 }

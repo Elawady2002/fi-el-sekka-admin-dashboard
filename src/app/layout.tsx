@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "Swiss Clean Admin Portal",
 };
 
+import { Toaster } from "sileo";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,6 +25,16 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable}`}>
       <body className="antialiased font-body">
+        <Toaster
+          position="top-center"
+          theme="dark"
+          options={{
+            styles: {
+              description: "text-[12px] font-medium w-full mt-0.5",
+              title: "font-bold"
+            }
+          }}
+        />
         <DashboardLayout>
           {children}
         </DashboardLayout>
