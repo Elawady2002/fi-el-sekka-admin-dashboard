@@ -1,25 +1,94 @@
 "use client";
 
-import { useState } from "react";
-import { Ticket, GraduationCap, Target } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Ticket, GraduationCap, Target, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Mock data for point-to-point bookings
-const MOCK_P2P_BOOKINGS = [
-    { id: "BKG-9428", user: "أحمد محمد", from: "التجمع الخامس", to: "جامعة المستقبل", date: "2024-03-20 08:30", status: "مكتملة", price: 25 },
-    { id: "BKG-9429", user: "سارة خالد", from: "المعادي", to: "القرية الذكية", date: "2024-03-20 09:00", status: "قيد المراجعة", price: 35 },
-    { id: "BKG-9430", user: "عمر عبدالله", from: "الشروق", to: "الرحاب", date: "2024-03-21 10:15", status: "مؤكدة", price: 20 },
-];
-
-// Mock data for university subscriptions
-const MOCK_UNI_SUBSCRIPTIONS = [
-    { id: "SUB-101", user: "كريم سامي", university: "الجامعة الألمانية بالكاھرة (GUC)", plan: "فصل دراسي كامل", startDate: "2024-02-15", status: "نشط", price: 4500 },
-    { id: "SUB-102", user: "نور علي", university: "جامعة بدر (BUC)", plan: "شهري", startDate: "2024-03-01", status: "نشط", price: 1200 },
-    { id: "SUB-103", user: "يوسف حسن", university: "الجامعة الكندية (CIC)", plan: "سنوي", startDate: "2023-09-01", status: "منتهي", price: 8000 },
-];
+import { supabase } from "@/lib/supabase";
 
 export default function BookingsPage() {
     const [activeTab, setActiveTab] = useState<'p2p' | 'university'>('p2p');
+    const [bookings, setBookings] = useState<any[]>([]);
+    const [subscriptions, setSubscriptions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Fetch Point-to-Point Bookings
+            const { data: p2pData, error: p2pError } = await supabase
+                .from('bookings')
+                .select(`
+                    id, 
+                    booking_date, 
+                    departure_time, 
+                    total_price, 
+                    status,
+                    users ( full_name ),
+                    pickup_station_id,
+                    dropoff_station_id
+                `)
+                .order('created_at', { ascending: false });
+
+            if (!p2pError && p2pData) {
+                // Fetch station names if possible
+                // Alternatively you could just map it as fetched if the relation works. 
+                // For safety we'll use raw names if relation fails, or just fetch all stations separately.
+                const { data: bStations } = await supabase.from('boarding_stations').select('id, name_ar');
+                const { data: aStations } = await supabase.from('arrival_stations').select('id, name_ar');
+
+                const enrichedBookings = p2pData.map((b: any) => ({
+                    id: b.id.substring(0, 8).toUpperCase(),
+                    rawId: b.id,
+                    user: b.users?.full_name || 'غير معروف',
+                    from: bStations?.find(s => s.id === b.pickup_station_id)?.name_ar || 'غير محدد',
+                    to: aStations?.find(s => s.id === b.dropoff_station_id)?.name_ar || 'غير محدد',
+                    date: `${b.booking_date} ${b.departure_time || ''}`,
+                    price: b.total_price || 0,
+                    status: b.status === 'pending' ? 'قيد المراجعة' : b.status === 'confirmed' ? 'مؤكدة' : b.status === 'completed' ? 'مكتملة' : b.status === 'cancelled' ? 'ملغاة' : b.status
+                }));
+                setBookings(enrichedBookings);
+            }
+
+            // Fetch Subscriptions
+            const { data: subsData, error: subsError } = await supabase
+                .from('subscriptions')
+                .select(`
+                    id,
+                    plan_type,
+                    start_date,
+                    total_price,
+                    status,
+                    users ( full_name ),
+                    route_id
+                `)
+                .order('created_at', { ascending: false });
+
+            if (!subsError && subsData) {
+                const { data: routes, error: routesError } = await supabase.from('routes').select('id, name_ar');
+                if (routesError) console.error(routesError);
+
+                const enrichedSubs = subsData.map((s: any) => ({
+                    id: s.id.substring(0, 8).toUpperCase(),
+                    rawId: s.id,
+                    user: s.users?.full_name || 'غير معروف',
+                    university: routes?.find((r: any) => r.id === s.route_id)?.name_ar || 'غير محدد',
+                    plan: s.plan_type === 'semester' ? 'فصل دراسي كامل' : s.plan_type === 'monthly' ? 'شهري' : s.plan_type,
+                    startDate: s.start_date,
+                    price: s.total_price || 0,
+                    status: s.status === 'active' ? 'نشط' : s.status === 'pending' ? 'أنتظار الموافقة' : s.status === 'expired' ? 'منتهي' : s.status
+                }));
+                setSubscriptions(enrichedSubs);
+            }
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     return (
         <div className="space-y-8 animate-fade-up h-[calc(100vh-8rem)] flex flex-col">
@@ -31,6 +100,7 @@ export default function BookingsPage() {
                         Bookings & Subscriptions Management
                     </p>
                 </div>
+                {loading && <Loader2 className="animate-spin text-primary-gold" size={24} />}
             </div>
 
             {/* Tabs */}
@@ -86,7 +156,7 @@ export default function BookingsPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {MOCK_P2P_BOOKINGS.map((booking) => (
+                                    {bookings.map((booking: any) => (
                                         <tr key={booking.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
                                             <td className="px-6 py-4 font-mono text-xs">{booking.id}</td>
                                             <td className="px-6 py-4 font-bold">{booking.user}</td>
@@ -133,7 +203,7 @@ export default function BookingsPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {MOCK_UNI_SUBSCRIPTIONS.map((sub) => (
+                                    {subscriptions.map((sub: any) => (
                                         <tr key={sub.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
                                             <td className="px-6 py-4 font-mono text-xs">{sub.id}</td>
                                             <td className="px-6 py-4 font-bold">{sub.user}</td>
