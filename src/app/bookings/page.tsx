@@ -14,7 +14,7 @@ export default function BookingsPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch Point-to-Point Bookings
+            // Fetch Point-to-Point Bookings with Relations
             const { data: p2pData, error: p2pError } = await supabase
                 .from('bookings')
                 .select(`
@@ -24,24 +24,20 @@ export default function BookingsPage() {
                     total_price, 
                     status,
                     users ( full_name ),
-                    pickup_station_id,
-                    dropoff_station_id
+                    pickup:boarding_stations ( name_ar ),
+                    dropoff:arrival_stations ( name_ar )
                 `)
                 .order('created_at', { ascending: false });
 
-            if (!p2pError && p2pData) {
-                // Fetch station names if possible
-                // Alternatively you could just map it as fetched if the relation works. 
-                // For safety we'll use raw names if relation fails, or just fetch all stations separately.
-                const { data: bStations } = await supabase.from('boarding_stations').select('id, name_ar');
-                const { data: aStations } = await supabase.from('arrival_stations').select('id, name_ar');
+            if (p2pError) throw p2pError;
 
+            if (p2pData) {
                 const enrichedBookings = p2pData.map((b: any) => ({
                     id: b.id.substring(0, 8).toUpperCase(),
                     rawId: b.id,
                     user: b.users?.full_name || 'غير معروف',
-                    from: bStations?.find(s => s.id === b.pickup_station_id)?.name_ar || 'غير محدد',
-                    to: aStations?.find(s => s.id === b.dropoff_station_id)?.name_ar || 'غير محدد',
+                    from: b.pickup?.name_ar || 'غير محدد',
+                    to: b.dropoff?.name_ar || 'غير محدد',
                     date: `${b.booking_date} ${b.departure_time || ''}`,
                     price: b.total_price || 0,
                     status: b.status === 'pending' ? 'قيد المراجعة' : b.status === 'confirmed' ? 'مؤكدة' : b.status === 'completed' ? 'مكتملة' : b.status === 'cancelled' ? 'ملغاة' : b.status
@@ -49,7 +45,7 @@ export default function BookingsPage() {
                 setBookings(enrichedBookings);
             }
 
-            // Fetch Subscriptions
+            // Fetch Subscriptions with Relations
             const { data: subsData, error: subsError } = await supabase
                 .from('subscriptions')
                 .select(`
@@ -59,19 +55,18 @@ export default function BookingsPage() {
                     total_price,
                     status,
                     users ( full_name ),
-                    route_id
+                    routes ( name_ar )
                 `)
                 .order('created_at', { ascending: false });
 
-            if (!subsError && subsData) {
-                const { data: routes, error: routesError } = await supabase.from('routes').select('id, name_ar');
-                if (routesError) console.error(routesError);
+            if (subsError) throw subsError;
 
+            if (subsData) {
                 const enrichedSubs = subsData.map((s: any) => ({
                     id: s.id.substring(0, 8).toUpperCase(),
                     rawId: s.id,
                     user: s.users?.full_name || 'غير معروف',
-                    university: routes?.find((r: any) => r.id === s.route_id)?.name_ar || 'غير محدد',
+                    university: s.routes?.name_ar || 'غير محدد',
                     plan: s.plan_type === 'semester' ? 'فصل دراسي كامل' : s.plan_type === 'monthly' ? 'شهري' : s.plan_type,
                     startDate: s.start_date,
                     price: s.total_price || 0,
