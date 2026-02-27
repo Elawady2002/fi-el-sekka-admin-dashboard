@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Target, Users, Settings, LogOut, Banknote } from "lucide-react";
+import { LayoutDashboard, Target, Users, Settings, LogOut, Banknote, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
     { label: "نظرة عامة", href: "/", icon: LayoutDashboard },
     { label: "من موقف لموقف", href: "/point-to-point", icon: Target },
+    { label: "الحجوزات", href: "/bookings", icon: CalendarCheck },
     { label: "المستخدمين", href: "/users", icon: Users },
     { label: "المحفظة", href: "/wallet", icon: Banknote },
     { label: "الإعدادات", href: "/settings", icon: Settings },
